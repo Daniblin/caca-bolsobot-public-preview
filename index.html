@@ -1,0 +1,2402 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8f6">
+  <meta name="description" content="Organize sinais públicos com contexto. Análise individual e preparação de relatos institucionais com revisão humana.">
+  <title>Caça BolsoBot — Central de análise</title>
+<style>
+:root {
+  color-scheme: light;
+  --paper: #f5f8f6;
+  --paper-light: #f8faf9;
+  --white: #ffffff;
+  --ink: #182c24;
+  --muted: #677b70;
+  --line: #e1e9e4;
+  --line-dark: #c9d7ce;
+  --green: #087c4e;
+  --green-dark: #064f34;
+  --green-pale: #e7f5ed;
+  --lime: #efd16a;
+  --warning: #8a681e;
+  --warning-bg: #fff8e4;
+  --red: #b34444;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --serif: var(--sans);
+  --mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --shadow: 0 5px 24px rgba(20, 57, 37, .035);
+  --sidebar-width: 232px;
+  --header-bg: rgba(255, 255, 255, .94);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0e1813;
+  --paper-light: #16231c;
+  --white: #19291f;
+  --ink: #e7f0e9;
+  --muted: #a3b5a8;
+  --line: #2c4032;
+  --line-dark: #455c4b;
+  --green: #54c98d;
+  --green-dark: #a1e8bf;
+  --green-pale: #223f2e;
+  --lime: #efd16a;
+  --warning: #efcf7a;
+  --warning-bg: #3c331d;
+  --red: #ef9595;
+  --shadow: 0 5px 24px rgba(0, 0, 0, .1);
+  --header-bg: rgba(25, 41, 31, .94);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+button, input, textarea, select { font: inherit; }
+button, a, input, textarea, select, summary { -webkit-tap-highlight-color: transparent; }
+button, a { touch-action: manipulation; }
+a { color: var(--green); text-underline-offset: 3px; }
+button { cursor: pointer; }
+h1, h2, h3, h4, p { margin-top: 0; }
+h1, h2, h3, h4 { letter-spacing: -.025em; line-height: 1.25; }
+p { margin-bottom: 12px; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+.icon { width: 19px; height: 19px; flex: 0 0 auto; vertical-align: middle; }
+[data-icon] { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; }
+.skip-link { position: fixed; left: 16px; top: 12px; z-index: 100; padding: 10px 15px; border-radius: 8px; background: var(--white); transform: translateY(-160%); }
+.skip-link:focus { transform: none; }
+.sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; display: flex; flex-direction: column; width: var(--sidebar-width); background: var(--white); border-right: 1px solid var(--line); padding: 29px 17px 20px; }
+.brand { display: flex; align-items: center; gap: 9px; padding: 0 6px; color: var(--ink); text-decoration: none; }
+.brand-symbol { display: grid; place-items: center; width: 39px; height: 39px; border-radius: 12px; background: var(--green-pale); color: var(--green); }
+.brand-name { font-size: 21px; font-weight: 780; letter-spacing: -.055em; line-height: 1; }
+.brand-name > span { font-weight: 500; color: var(--green); }
+.brand-name small { display: block; margin-top: 8px; font-size: 6.5px; font-weight: 650; letter-spacing: .11em; color: var(--muted); }
+.workspace-label { display: flex; gap: 10px; align-items: center; margin: 31px 3px 27px; padding: 11px 9px; border: 1px solid var(--line); border-radius: 11px; font-size: 11px; font-weight: 650; }
+.workspace-label > div { flex: 1; }
+.workspace-label small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+.workspace-avatar { padding: 7px; background: var(--green-pale); border-radius: 8px; color: var(--green); }
+.workspace-avatar .icon { width: 16px; height: 16px; }
+.workspace-label > [data-icon]:last-child { color: var(--muted); }
+.workspace-label > [data-icon]:last-child .icon { width: 13px; height: 13px; }
+.nav-caption { color: var(--muted); font-size: 9px; font-weight: 650; letter-spacing: .13em; margin: 0 12px 12px; }
+.sidebar-nav { display: grid; gap: 6px; }
+.nav-item { display: flex; align-items: center; gap: 11px; width: 100%; padding: 12px 11px; border: 0; background: transparent; border-radius: 9px; color: var(--muted); font-size: 11px; font-weight: 550; text-decoration: none; text-align: left; transition: background 180ms, color 180ms; }
+.nav-item:hover { background: var(--paper-light); color: var(--ink); }
+.nav-item.is-active { background: var(--green-pale); color: var(--green); font-weight: 700; }
+.nav-item .icon { width: 18px; height: 18px; }
+.nav-indicator { margin-left: auto; width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.nav-badge { margin-left: auto; padding: 2px 5px; border-radius: 4px; background: var(--warning-bg); color: var(--warning); font-size: 7px; letter-spacing: .06em; }
+.sidebar-note { margin: auto 2px 20px; padding: 17px 14px; border-radius: 13px; background: var(--green-pale); }
+.sidebar-note-icon { width: 32px; height: 32px; margin-bottom: 11px; border-radius: 9px; background: var(--white); color: var(--green); }
+.sidebar-note strong { display: block; font-size: 12px; }
+.sidebar-note p { color: var(--muted); font-size: 10px; margin: 6px 0 13px; }
+.safe-badge { display: flex; align-items: center; gap: 6px; color: var(--green); font-size: 8px; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #b89520; }
+.sidebar-bottom { display: flex; align-items: center; gap: 9px; padding: 16px 5px 0; border-top: 1px solid var(--line); }
+.session-avatar, .topbar-avatar { display: grid; place-items: center; width: 33px; height: 33px; background: var(--paper-light); color: var(--muted); border: 1px solid var(--line); border-radius: 50%; }
+.sidebar-bottom > div { flex: 1; font-size: 10px; font-weight: 600; }
+.sidebar-bottom small { display: block; color: var(--muted); font-size: 8px; font-weight: 400; }
+.sidebar-bottom > [data-icon]:last-child .icon { width: 13px; height: 13px; color: var(--muted); }
+.app-main { margin-left: var(--sidebar-width); }
+.header-brand { display: none; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; flex: 0 0 auto; }
+.header-brand-symbol { width: 38px; height: 38px; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(8, 124, 78, .08); }
+.header-brand-symbol .icon { width: 20px; height: 20px; }
+.header-brand-copy { display: grid; gap: 3px; }
+.header-brand-name { font-size: 15px; font-weight: 800; letter-spacing: -.045em; line-height: 1.1; white-space: nowrap; }
+.header-brand-name strong { color: var(--green); font-weight: 850; }
+.header-brand-copy small { color: var(--muted); font-size: 8px; line-height: 1.1; letter-spacing: .045em; }
+.site-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 76px; padding: 0 36px; border-bottom: 1px solid var(--line); background: var(--header-bg); backdrop-filter: blur(12px); }
+.breadcrumb { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--muted); }
+.breadcrumb strong { color: var(--ink); font-weight: 550; }
+.breadcrumb .icon { width: 13px; height: 13px; }
+.topbar-actions { display: flex; align-items: center; gap: 19px; }
+.header-status { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--muted); }
+.icon-button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--white); color: var(--muted); }
+.icon-button:hover { color: var(--green); border-color: var(--line-dark); background: var(--paper-light); }
+.mobile-menu { display: none; }
+.page-shell { width: min(1180px, calc(100% - 72px)); margin: 0 auto; }
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; align-items: center; gap: 40px; margin: 28px 0 30px; padding: 34px; border: 1px solid var(--line); border-radius: 23px; background: radial-gradient(ellipse at 8% 0%, rgba(118, 205, 153, .13), transparent 37%), radial-gradient(ellipse at 100% 100%, rgba(235, 205, 95, .13), transparent 32%), var(--white); box-shadow: 0 16px 44px rgba(20, 57, 37, .045); }
+.eyebrow { color: var(--green); font-size: 9px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; margin: 0 0 7px; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; background: color-mix(in srgb, var(--green-pale) 78%, var(--white)); border: 1px solid var(--line); border-radius: 999px; font-size: 8px; letter-spacing: .08em; }
+.hero-eyebrow .icon { width: 14px; height: 14px; color: var(--green); }
+.hero-eyebrow strong { color: var(--ink); font-size: 10px; font-weight: 800; letter-spacing: -.015em; text-transform: none; white-space: nowrap; }
+.hero-eyebrow i { width: 3px; height: 3px; border-radius: 50%; background: var(--lime); }
+.hero-eyebrow > span:last-child { white-space: nowrap; }
+h1 { margin: 16px 0 15px; font-size: clamp(36px, 3.6vw, 52px); font-weight: 680; letter-spacing: -.055em; line-height: 1.08; }
+h1 em { color: var(--green); font-style: normal; }
+.hero-intro { max-width: 480px; color: var(--muted); font-size: 12px; line-height: 1.8; margin-bottom: 20px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 43px; padding: 10px 16px; border: 1px solid transparent; border-radius: 9px; font-size: 11px; font-weight: 650; text-decoration: none; line-height: 1.4; transition: background 180ms, border-color 180ms, transform 180ms, box-shadow 180ms; }
+.button .icon { width: 16px; height: 16px; }
+.button:hover:not(:disabled) { transform: translateY(-1px); }
+.button-primary { color: #fff; background: #087c4e; box-shadow: 0 3px 7px rgba(8, 124, 78, .1); }
+.button-primary:hover:not(:disabled) { background: #066840; }
+.button-soft { color: var(--ink); background: var(--white); border-color: var(--line); }
+.button-outline { background: transparent; border-color: var(--line-dark); color: var(--ink); }
+.button-soft:hover:not(:disabled), .button-outline:hover:not(:disabled) { border-color: var(--green); background: var(--green-pale); }
+.button:disabled { opacity: .48; cursor: not-allowed; transform: none; box-shadow: none; }
+.hero-meta { display: flex; gap: 19px; margin-top: 18px; color: var(--muted); font-size: 9px; }
+.hero-meta > span { display: flex; gap: 6px; align-items: center; }
+.hero-meta .icon { width: 12px; height: 12px; color: var(--green); }
+.hero-side { padding: 20px; background: var(--white); border: 1px solid var(--line); border-radius: 17px; box-shadow: var(--shadow); }
+.side-card-header { display: flex; align-items: center; gap: 11px; }
+.side-icon { width: 38px; height: 38px; border-radius: 11px; background: var(--green-pale); color: var(--green); }
+.side-card-header > div { flex: 1; }
+.side-card-header strong { display: block; font-size: 12px; }
+.side-card-header small { font-size: 9px; color: var(--muted); }
+.side-live { color: var(--green); }
+.side-live .icon { width: 14px; height: 14px; }
+.mini-steps { padding: 0; margin: 19px 0; list-style: none; }
+.mini-steps li { display: flex; align-items: center; gap: 11px; padding: 10px; margin: 7px 0; border: 1px solid var(--line); border-radius: 9px; }
+.mini-steps li > [data-icon] { padding: 7px; background: var(--paper-light); color: var(--green); border-radius: 7px; }
+.mini-steps .icon { width: 15px; height: 15px; }
+.mini-steps li > div { flex: 1; }
+.mini-steps strong { display: block; font-size: 10px; }
+.mini-steps small { display: block; color: var(--muted); font-size: 9px; }
+.step-mini-number { color: var(--muted); font: 9px var(--mono); }
+.side-foot { display: flex; gap: 7px; align-items: center; color: var(--warning); background: var(--warning-bg); border-radius: 7px; padding: 8px 10px; font-size: 9px; }
+.side-foot .icon { width: 13px; height: 13px; }
+.workspace, .assessment-panel { padding: 28px; background: var(--white); border: 1px solid var(--line); border-radius: 17px; box-shadow: var(--shadow); }
+.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 22px; }
+.section-heading h2 { margin: 4px 0 0; font-size: 24px; font-weight: 650; }
+.section-subtitle { font-size: 11px; color: var(--muted); margin: 7px 0 0; }
+.privacy-pill { display: flex; align-items: center; gap: 6px; color: var(--green); background: var(--green-pale); border-radius: 6px; padding: 7px 9px; font-size: 8px; white-space: nowrap; }
+.privacy-pill .icon { width: 12px; height: 12px; }
+.workflow-stepper { display: flex; list-style: none; padding: 0; margin: 25px 0; }
+.workflow-stepper li { display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1; color: var(--muted); font-size: 10px; }
+.workflow-stepper li:not(:last-child) { margin-right: 12px; }
+.step-number { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: var(--paper-light); border: 1px solid var(--line); color: var(--muted); font: 10px var(--mono); }
+.workflow-stepper small { display: block; color: var(--muted); font-size: 8px; font-weight: 400; }
+.workflow-stepper .is-current { color: var(--green); font-weight: 700; }
+.workflow-stepper .is-current .step-number { background: var(--green-pale); color: var(--green); border-color: var(--green); box-shadow: 0 0 0 3px var(--paper-light); }
+.workflow-stepper .is-complete .step-number { background: #087c4e; border-color: #087c4e; color: #fff; }
+.workflow-stepper .step-number .icon { width: 14px; height: 14px; }
+.profile-form { padding: 22px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper-light); }
+.intake-heading { display: flex; gap: 11px; align-items: center; margin-bottom: 20px; }
+.intake-icon { padding: 10px; background: var(--white); border: 1px solid var(--line); color: var(--green); border-radius: 10px; }
+.intake-heading h3 { font-size: 14px; font-weight: 650; margin: 0; }
+.intake-heading p { font-size: 10px; color: var(--muted); margin: 4px 0 0; }
+.intake-shortcut { margin-left: auto; padding: 4px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--white); font: 9px var(--mono); color: var(--muted); white-space: nowrap; }
+.platform-picker { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--line); background: var(--white); border-radius: 9px; margin-bottom: 17px; }
+.platform-choice { display: flex; align-items: center; gap: 7px; padding: 7px 13px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); font-size: 10px; }
+.platform-choice.is-selected { background: var(--green-pale); color: var(--green); border-color: var(--line); font-weight: 650; }
+.platform-choice .icon { width: 14px; height: 14px; }
+.platform-monogram { display: inline-flex; width: 14px; justify-content: center; font-weight: 750; font-size: 16px; line-height: 1; }
+.field-label { display: block; color: var(--ink); font-size: 10px; font-weight: 650; margin-bottom: 8px; }
+.url-row { display: flex; gap: 9px; }
+.url-input-wrap { position: relative; min-width: 0; flex: 1; }
+.url-glyph { position: absolute; top: 15px; left: 13px; color: var(--muted); }
+.url-glyph .icon { width: 16px; height: 16px; }
+.url-input-wrap input { width: 100%; height: 47px; padding: 0 86px 0 39px; border: 1px solid var(--line-dark); border-radius: 9px; background: var(--white); color: var(--ink); font-size: 11px; }
+.paste-control { position: absolute; right: 7px; top: 8px; display: flex; align-items: center; gap: 5px; padding: 5px 8px; border: 0; border-radius: 5px; background: var(--paper-light); color: var(--muted); font-size: 9px; }
+.paste-control:hover { background: var(--green-pale); color: var(--green); }
+.paste-control .icon { width: 12px; height: 12px; }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: .72; }
+.field-help, .boundary-note { color: var(--muted); font-size: 9px; margin: 9px 0 0; }
+.boundary-note { display: flex; align-items: start; gap: 6px; font-size: 8px; }
+.boundary-note .icon { width: 11px; height: 11px; }
+.form-error { margin: 0; color: var(--red); font-size: 11px; }
+.form-error:not(:empty) { margin-top: 9px; }
+.check-line { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.check-line input { width: 15px; height: 15px; flex: 0 0 auto; margin: 2px 0 0; accent-color: #087c4e; }
+.public-confirm { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.review-panel { margin-top: 26px; padding-top: 23px; border-top: 1px solid var(--line); }
+.profile-ribbon { display: flex; align-items: center; gap: 12px; padding: 13px; margin-bottom: 25px; background: var(--green-pale); border: 1px solid var(--line); border-radius: 10px; }
+.profile-ribbon-icon { color: var(--green); }
+.platform-chip { padding: 5px 8px; border-radius: 5px; background: var(--white); border: 1px solid var(--line); color: var(--green); font-size: 8px; font-weight: 650; text-transform: uppercase; }
+.profile-address { flex: 1; min-width: 0; }
+.profile-address small { display: block; font-size: 7px; letter-spacing: .07em; color: var(--muted); }
+.profile-address a { display: block; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.text-button { display: inline-flex; align-items: center; gap: 6px; padding: 5px; border: 0; background: transparent; color: var(--green); font-size: 10px; }
+.text-button .icon { width: 13px; height: 13px; }
+.quiet-label { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 9px; }
+.quiet-label .icon { width: 12px; height: 12px; }
+.inner-heading { margin-bottom: 11px; }
+.inner-heading h2 { font-size: 21px; }
+.section-description { font-size: 11px; color: var(--muted); max-width: 700px; }
+.metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.input-card { display: flex; flex-direction: column; gap: 7px; padding: 15px; background: var(--paper-light); border: 1px solid var(--line); border-radius: 10px; }
+.input-card-icon { color: var(--green); justify-content: flex-start; }
+.input-card-icon .icon { width: 16px; height: 16px; }
+.input-card-title { font-size: 10px; font-weight: 650; }
+.input-card-copy { flex: 1; color: var(--muted); font-size: 9px; line-height: 1.5; min-height: 35px; }
+.input-card input, .input-card select { width: 100%; height: 36px; padding: 0 9px; background: var(--white); border: 1px solid var(--line-dark); border-radius: 6px; color: var(--ink); font-size: 11px; }
+.signal-selectors { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin: 24px 0; }
+.signal-fieldset { min-width: 0; margin: 0; padding: 15px; border: 1px solid var(--line); border-radius: 10px; }
+.signal-fieldset legend { font-size: 11px; font-weight: 650; padding: 0 5px; }
+.signal-fieldset p { color: var(--muted); font-size: 10px; }
+.radio-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.radio-row label { display: flex; align-items: center; gap: 5px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; font-size: 9px; color: var(--muted); }
+.radio-row label:has(input:checked) { background: var(--green-pale); border-color: var(--green); color: var(--green); }
+.radio-row input { accent-color: #087c4e; }
+.evidence-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 22px; margin-bottom: 15px; }
+.evidence-head h3, .findings-title h3, .report-heading h3, .manual-report h3 { font-size: 16px; margin: 0; }
+.evidence-head p { font-size: 10px; color: var(--muted); margin: 5px 0 0; }
+.empty-observations { display: flex; flex-direction: column; align-items: center; padding: 27px; margin-bottom: 16px; background: var(--paper-light); border: 1px dashed var(--line-dark); border-radius: 11px; text-align: center; }
+.empty-observations > [data-icon] { width: 36px; height: 36px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); color: var(--green); }
+.empty-observations strong { font-size: 11px; }
+.empty-observations p { font-size: 10px; color: var(--muted); margin: 4px 0 0; }
+.observations-list { display: grid; gap: 13px; }
+.observation-card { padding: 18px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper-light); animation: enter 200ms ease-out; }
+.observation-card-top { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
+.observation-number { color: var(--green); font: 9px var(--mono); }
+.remove-observation { display: flex; align-items: center; gap: 6px; padding: 4px; border: 0; background: transparent; color: var(--red); font-size: 9px; }
+.remove-observation .icon { width: 13px; height: 13px; }
+.observation-fields { display: grid; grid-template-columns: 1fr 1.8fr; gap: 14px; }
+.observation-card label { display: block; }
+.observation-card label > span { display: block; font-size: 10px; margin-bottom: 6px; }
+.observation-card small { font-weight: 400; color: var(--muted); }
+.observation-card input, .observation-card select, .observation-card textarea { display: block; width: 100%; padding: 10px; border: 1px solid var(--line-dark); border-radius: 7px; background: var(--white); color: var(--ink); font-size: 11px; }
+.observation-text { margin-top: 12px; }
+.observation-card textarea { resize: vertical; }
+.form-actions { display: flex; align-items: center; gap: 16px; margin-top: 20px; }
+.assessment-panel { margin-top: 28px; }
+.assessment-layout { display: grid; grid-template-columns: .78fr 1.22fr; gap: 24px; }
+.impact-section { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr); gap:16px; margin:20px 0 6px; }
+.impact-message { padding:clamp(20px,3vw,32px); border-radius:17px; background:linear-gradient(125deg,#064f34,#087c4e 74%,#27855b); color:white; box-shadow:0 14px 34px rgba(6,79,52,.15); }
+.impact-message .eyebrow { display:flex; align-items:center; gap:8px; color:#f1dc81; }
+.impact-message h2 { max-width:620px; margin:8px 0 10px; font-size:clamp(21px,3vw,31px); }
+.impact-message p:not(.eyebrow) { max-width:610px; margin-bottom:16px; color:#e4f4e9; font-size:13px; }
+.impact-message .button-soft { background:#f1dc81; color:#143c2a; border-color:#f1dc81; }
+.impact-metrics { display:grid; gap:12px; }
+.impact-counter { align-content:center; min-height:160px; padding:19px; border-color:#c8e5d3; background:linear-gradient(145deg,#e7f5ed,#f7f2d7); }
+.impact-metric-label { display:flex; align-items:center; gap:7px; color:var(--green); font-size:9px; font-weight:750; letter-spacing:.09em; }
+.impact-counter strong { color:var(--green-dark); font-size:clamp(19px,2.5vw,27px); line-height:1.18; }
+.impact-counter small { font-size:10px; }
+.top-review-score { display:grid; grid-template-columns:1fr auto; align-items:center; gap:4px 12px; padding:15px 18px; border:1px solid #225c3d; border-radius:13px; background:linear-gradient(125deg,#173c2a,#245d3b); color:#eef8f0; }
+.top-review-score .impact-metric-label, .top-review-score > span { grid-column:1; }
+.top-review-score .impact-metric-label { color:#f1dc81; }
+.top-review-score strong { grid-column:2; grid-row:1 / span 2; color:#f1dc81; font-size:38px; line-height:1; }
+.top-review-score > span { color:#d9e9dd; font-size:11px; }
+.top-review-score > a { grid-column:1 / -1; display:flex; align-items:center; gap:6px; color:white; font-size:11px; }
+.hero-how-link { display:inline-flex; align-items:center; gap:5px; padding:8px 5px; color:var(--green-dark); font-size:11px; font-weight:700; }
+html[data-theme="dark"] .impact-counter { border-color:#42624d; background:linear-gradient(145deg,#223f2e,#453b1f); }
+html[data-theme="dark"] .impact-counter strong { color:#eaf5ed; }
+
+.collective-transfer { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px 16px; margin:16px 0; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--green-pale); }
+.collective-transfer strong { font-size:13px; }
+.collective-transfer p { margin:4px 0 0; color:var(--muted); font-size:11px; }
+.collective-transfer > .field-help { grid-column:1 / -1; margin:0; }
+.score-card { background: #084e35; color: #e8f4ed; border-radius: 13px; padding: 23px; }
+.score-topline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: #c4ddcc; font: 8px var(--mono); }
+.score-stamp { border: 1px solid #56846b; padding: 3px 5px; border-radius: 4px; color: #c4ddcc; font-size: 7px; }
+.score-value { margin: 16px 0 8px; color: #efd16a; font-size: 58px; font-weight: 600; line-height: 1; letter-spacing: -.04em; }
+.score-value small { margin-left: 7px; font: 12px var(--mono); color: #bcdbca; }
+.score-band { display: inline-block; padding: 5px 8px; border-radius: 5px; background: rgba(255,255,255,.1); font-size: 10px; font-weight: 650; }
+.score-card > p { margin: 12px 0 19px; font-size: 10px; color: #c4ddcc; }
+.confidence-row { display: flex; justify-content: space-between; gap: 10px; font-size: 9px; color: #c4ddcc; }
+.confidence-row strong { color: #fff; }
+.confidence-meter { height: 5px; margin-top: 8px; border-radius: 4px; background: #3c6f54; overflow: hidden; }
+.confidence-meter span { display: block; width: 0; height: 100%; background: #efd16a; transition: width 200ms; }
+.confidence-meter span.confidence-low { width: 34%; }
+.confidence-meter span.confidence-medium { width: 68%; }
+.confidence-meter span.confidence-high { width: 100%; }
+.confidence-caption { font-size: 8px !important; color: #bfd6c8 !important; }
+.findings-column { min-width: 0; }
+.findings-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 11px; }
+.findings-title h3 { font-size: 14px; }
+.finding-count { color: var(--muted); font: 8px var(--mono); }
+.findings-list { display: grid; gap: 11px; }
+.finding { display: grid; grid-template-columns: 26px 1fr auto; align-items: start; gap: 9px; padding: 13px; background: var(--paper-light); border: 1px solid var(--line); border-radius: 9px; }
+.finding-symbol { display: grid; place-items: center; width: 24px; height: 24px; color: var(--green); background: var(--green-pale); border-radius: 7px; font-size: 11px; }
+.finding-symbol .icon { width: 14px; height: 14px; }
+.finding h4 { margin: 0 0 4px; font-size: 11px; }
+.finding-interpretation { font-size: 10px; color: var(--ink); margin: 0; }
+.finding-context { font-size: 9px; color: var(--muted); margin: 7px 0 0; overflow-wrap: anywhere; }
+.finding-point { white-space: nowrap; font: 8px var(--mono); color: var(--green); }
+.findings-empty, .result-empty { padding: 20px; color: var(--muted); font-size: 11px; border: 1px dashed var(--line-dark); border-radius: 9px; }
+.missing-callout, .api-summary-note { padding: 14px; background: var(--paper-light); border: 1px solid var(--line); border-radius: 9px; color: var(--muted); font-size: 10px; margin: 16px 0 0; }
+.missing-callout strong { color: var(--ink); }
+.review-guard, .demo-label { display: flex; align-items: flex-start; gap: 10px; padding: 13px 15px; margin-top: 14px; border: 1px solid #e6d29b; border-radius: 9px; color: var(--warning); background: var(--warning-bg); font-size: 10px; }
+.review-guard .icon { width: 16px; height: 16px; }
+.review-guard p { margin: 0; }
+.report-section { margin-top: 26px; padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-light); }
+.report-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 17px; }
+.report-heading p:not(.eyebrow) { margin: 7px 0 0; font-size: 11px; color: var(--muted); }
+.editable-badge { display: flex; gap: 5px; align-items: center; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; color: var(--green); font: 8px var(--mono); }
+.editable-badge .icon { width: 12px; height: 12px; }
+#report-draft, #threads-draft { width: 100%; min-height: 260px; display: block; padding: 15px; border: 1px solid var(--line-dark); border-radius: 9px; background: var(--white); color: var(--ink); font: 11px/1.8 var(--mono); resize: vertical; }
+.approval-line { margin-top: 17px; }
+.report-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 15px; }
+.report-actions > a:not(.button) { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; }
+.manual-report { margin-top: 17px; padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--green-pale); }
+.manual-report-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.manual-tag { display: flex; align-items: center; gap: 6px; color: var(--green); font-size: 9px; white-space: nowrap; }
+.manual-tag .icon { width: 14px; height: 14px; }
+.manual-report > p { color: var(--muted); font-size: 11px; margin: 12px 0; }
+.official-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.official-links a { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; color: var(--green); }
+.report-followup { margin-top: 16px; padding: 16px; border: 1px solid var(--line-dark); border-radius: 12px; background: var(--white); box-shadow: 0 7px 22px rgba(20, 57, 37, .035); }
+.report-followup-intro { display: grid; grid-template-columns: 35px 1fr; gap: 10px; align-items: start; }
+.report-followup-icon { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 11px; background: var(--green-pale); color: var(--green); }
+.report-followup-intro strong { display: block; font-size: 11px; }
+.report-followup-intro p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+.report-status-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.report-status-actions .button { min-height: 38px; font-size: 10px; }
+.report-status-result { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; padding: 12px; border-radius: 9px; background: var(--green-pale); color: var(--ink); }
+.report-status-result > [data-icon] { color: var(--green); padding-top: 1px; }
+.report-status-result[data-status="not-submitted"] { background: var(--warning-bg); }
+.report-status-result[data-status="not-submitted"] > [data-icon] { color: var(--warning); }
+.report-status-result > div { flex: 1; }
+.report-status-result strong { display: block; font-size: 10px; }
+.report-status-result p { margin: 4px 0 0; color: var(--muted); font-size: 9px; }
+.report-status-result .text-button { margin-left: auto; white-space: nowrap; font-size: 9px; }
+.report-status-note { margin: 9px 0 0; color: var(--muted); font-size: 9px; }
+.report-caution { border-top: 1px solid var(--line-dark); padding-top: 12px; margin-top: 16px; font-size: 10px; color: var(--warning); }
+.demo-launch { display: inline-flex; gap: 8px; margin-top: 17px; }
+.demo-launch .icon { width: 16px; height: 16px; }
+.threads-panel { background: var(--white); padding: 22px; margin-top: 24px; }
+.api-panel-heading { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 10px; }
+.api-panel-heading h2, .threads-panel > h2 { font-size: 23px; margin: 4px 0; }
+.threads-panel > p:not(.eyebrow), .api-policy { font-size: 10px; color: var(--muted); }
+.api-auth-row { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 13px 0; }
+.api-status { font-size: 10px; color: var(--muted); }
+.api-loading { display: flex; gap: 8px; align-items: center; padding: 10px; color: var(--green); }
+.api-loading .icon { animation: pulse 1s ease-in-out infinite; }
+#threads-status { color: var(--muted); font-size: 10px; }
+#threads-result { margin-top: 20px; }
+#threads-demo-badge { margin: 0 0 17px; }
+.result-tabs { display: flex; gap: 5px; padding: 5px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper-light); margin: 18px 0; }
+.result-tab { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 15px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); font-size: 11px; font-weight: 550; }
+.result-tab[aria-selected="true"] { background: var(--white); color: var(--green); border-color: var(--line); box-shadow: 0 2px 4px rgba(20, 50, 34, .03); }
+.result-tab .icon { width: 15px; height: 15px; }
+.result-pane { animation: enter 180ms ease-out; }
+.api-overview { display: grid; grid-template-columns: .65fr 1.35fr; gap: 18px; }
+.api-score-card { padding: 22px; border-radius: 12px; background: #084e35; color: #e9f5ed; }
+.api-score-card p { color: #c7decd; font-size: 10px; }
+.api-score-card h3 { font-size: 14px; margin: 10px 0; }
+.api-score-number { color: #efd16a; font-size: 54px; font-weight: 650; letter-spacing: -.05em; line-height: 1.1; }
+.api-score-number small { font: 12px var(--mono); color: #d1e3d6; margin-left: 5px; }
+.api-score-card meter { display: block; width: 100%; height: 8px; margin: 10px 0; accent-color: #efd16a; }
+.api-stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+.api-stat { padding: 16px; background: var(--paper-light); border: 1px solid var(--line); border-radius: 10px; }
+.api-stat .icon { width: 16px; height: 16px; color: var(--green); }
+.api-stat strong { display: block; font-size: 23px; margin: 7px 0 3px; letter-spacing: -.025em; }
+.api-stat span, .api-stat p { color: var(--muted); font-size: 9px; margin: 0; }
+#threads-summary { font-size: 11px; color: var(--muted); margin-top: 13px; }
+#threads-provenance { font: 8px/1.7 var(--mono); color: var(--muted); overflow-wrap: anywhere; margin: 13px 0; }
+.signal-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; margin-top: 18px; }
+.signal-card { background: var(--paper-light); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.signal-card summary, .signal-card-heading { display: flex; gap: 9px; align-items: center; padding: 13px; cursor: pointer; list-style: none; }
+.signal-card summary::-webkit-details-marker { display: none; }
+.signal-card summary > strong, .signal-card-heading > div, .signal-card-heading > span:not(.signal-icon):not(.signal-status) { flex: 1; min-width: 0; }
+.signal-card summary h4 { font-size: 10px; margin: 0; }
+.signal-card summary .icon { width: 14px; height: 14px; }
+.signal-icon { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 auto; background: var(--green-pale); color: var(--green); border-radius: 8px; }
+.signal-status { font: 8px var(--mono); white-space: nowrap; color: var(--green); }
+.signal-card[open] > summary { border-bottom: 1px solid var(--line); }
+.signal-detail { padding: 13px; font-size: 10px; }
+.signal-detail p { color: var(--muted); overflow-wrap: anywhere; }
+.signal-detail .finding-interpretation { color: var(--ink); }
+.evidence-item { margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--white); font-size: 10px; overflow-wrap: anywhere; }
+.evidence-item p { margin: 6px 0; }
+.evidence-item time, .evidence-item small { font: 8px var(--mono); color: var(--muted); }
+.evidence-item a { font-size: 9px; }
+.method-section { display: grid; grid-template-columns: .75fr 1.25fr; gap: 50px; padding: 45px 0; }
+.method-aside h2 { font-size: 29px; font-weight: 650; margin: 10px 0; }
+.method-aside > p:last-child { color: var(--muted); font-size: 11px; max-width: 280px; }
+.knowledge-card { padding: 0; background: var(--white); border: 1px solid var(--line); border-radius: 11px; margin-bottom: 11px; }
+.knowledge-card summary { display: flex; gap: 9px; align-items: center; padding: 15px; font-size: 11px; font-weight: 600; cursor: pointer; list-style: none; }
+.knowledge-card summary::-webkit-details-marker { display: none; }
+.knowledge-card summary > [data-icon]:first-child { color: var(--green); }
+.knowledge-card summary > [data-icon]:last-child { margin-left: auto; color: var(--muted); }
+.knowledge-card summary .icon { width: 16px; height: 16px; }
+.knowledge-card[open] summary > [data-icon]:last-child { transform: rotate(180deg); }
+.knowledge-card > div { padding: 0 15px 15px; color: var(--muted); font-size: 10px; }
+.knowledge-card a { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; }
+.knowledge-card a .icon { width: 12px; height: 12px; }
+.privacy-strip { display: flex; align-items: flex-start; gap: 14px; padding: 24px; border: 1px solid var(--line); border-radius: 13px; background: var(--green-pale); margin-bottom: 29px; }
+.privacy-symbol { padding: 11px; background: var(--white); border-radius: 11px; color: var(--green); }
+.privacy-strip > div { flex: 1; }
+.privacy-strip h2 { font-size: 17px; margin: 7px 0; }
+.privacy-strip p:not(.eyebrow) { color: var(--muted); font-size: 10px; margin-bottom: 0; }
+.privacy-badge { display: flex; gap: 6px; align-items: center; padding: 7px 9px; border: 1px solid var(--line-dark); border-radius: 6px; color: var(--green); font-size: 8px; white-space: nowrap; }
+.privacy-badge .icon { width: 12px; height: 12px; }
+.site-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 22px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; }
+.site-footer a { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); text-decoration: none; }
+.site-footer .icon { width: 12px; height: 12px; }
+.toast { position: fixed; bottom: 24px; left: calc(var(--sidebar-width) + 30px); z-index: 80; display: flex; align-items: center; gap: 9px; max-width: calc(100vw - var(--sidebar-width) - 60px); padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--ink); color: var(--white); font-size: 11px; box-shadow: var(--shadow); animation: enter 180ms ease-out; }
+@keyframes enter { from { opacity: .2; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 50% { opacity: .45; } }
+@media (max-width: 1100px) {
+  .page-shell { width: calc(100% - 48px); }
+  .site-header { padding: 0 24px; }
+  .hero { gap: 24px; padding: 28px; }
+  .hero-side { padding: 16px; }
+  .privacy-badge { display: none; }
+  .workflow-stepper small { display: none; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 950px) {
+  .sidebar { transform: translateX(-100%); visibility: hidden; transition: transform 200ms ease, visibility 200ms; }
+  .sidebar.is-open { transform: translateX(0); visibility: visible; }
+  .app-main { margin-left: 0; }
+  .mobile-menu { display: inline-flex; }
+  .site-header { justify-content: flex-start; height: 72px; }
+  .header-brand { display: inline-flex; }
+  .breadcrumb { margin-left: 8px; }
+  .topbar-actions { margin-left: auto; }
+  .nav-backdrop { position: fixed; inset: 0; z-index: 30; border: 0; padding: 0; background: rgba(0, 24, 12, .4); backdrop-filter: blur(2px); }
+  body.nav-open { overflow: hidden; }
+  .toast { left: 20px; max-width: calc(100vw - 40px); }
+  h1 { font-size: 43px; }
+}
+@media (max-width: 650px) {
+  .page-shell { width: calc(100% - 30px); }
+  .site-header { padding: 0 15px; gap: 10px; }
+  .breadcrumb, .header-status, .topbar-avatar { display: none; }
+  .header-brand-symbol { width: 34px; height: 34px; }
+  .header-brand-name { font-size: 14px; }
+  .header-brand-copy small { font-size: 7px; }
+  .topbar-actions { gap: 8px; }
+  .hero { grid-template-columns: 1fr; gap: 25px; margin: 15px 0 20px; padding: 19px; border-radius: 18px; }
+  h1 { font-size: 41px; }
+  .hero-intro { font-size: 12px; }
+  .hero-side { padding: 17px; }
+  .workspace, .assessment-panel { padding: 18px; border-radius: 13px; }
+  .section-heading { align-items: start; gap: 12px; }
+  .section-heading h2 { font-size: 21px; }
+  .privacy-pill { display: none; }
+  .workflow-stepper li { flex-direction: column; align-items: center; gap: 5px; font-size: 9px; }
+  .workflow-stepper li:not(:last-child) { margin-right: 6px; }
+  .profile-form { padding: 16px; }
+  .intake-heading { gap: 9px; }
+  .intake-heading h3 { font-size: 12px; }
+  .intake-heading p { font-size: 9px; }
+  .intake-shortcut { display: none; }
+  .platform-picker { display: flex; }
+  .platform-choice { flex: 1; justify-content: center; padding: 7px 5px; font-size: 9px; }
+  .url-row { flex-direction: column; }
+  .url-row > .button { width: 100%; }
+  .url-input-wrap input { font-size: 10px; }
+  .profile-ribbon { flex-wrap: wrap; gap: 8px; }
+  .profile-ribbon-icon { display: none; }
+  .profile-address { min-width: 140px; }
+  .profile-ribbon .text-button { margin-left: auto; }
+  .signal-selectors { grid-template-columns: 1fr; }
+  .metrics-grid { gap: 9px; }
+  .input-card { padding: 11px; }
+  .evidence-head { align-items: flex-start; flex-direction: column; }
+  .observation-fields { grid-template-columns: 1fr; }
+  .form-actions { align-items: start; flex-direction: column; }
+  .assessment-layout { grid-template-columns: 1fr; }
+  .impact-section { grid-template-columns:1fr; }
+  .collective-transfer { grid-template-columns:1fr; }
+  .findings-title { align-items: start; }
+  .finding { grid-template-columns: 24px 1fr; }
+  .finding-point { grid-column: 2; }
+  .report-section, .manual-report, .threads-panel { padding: 15px; }
+  .manual-report-head { flex-direction: column; align-items: start; }
+  .report-actions .button { flex: 1 1 auto; }
+  .result-tabs { gap: 3px; }
+  .result-tab { flex: 1; padding: 8px 7px; font-size: 10px; gap: 5px; }
+  .result-tab .icon { width: 13px; height: 13px; }
+  .api-overview { grid-template-columns: 1fr; }
+  .api-stat-grid { grid-template-columns: 1fr 1fr; }
+  .signal-cards { grid-template-columns: 1fr; }
+  .api-panel-heading { flex-direction: column; }
+  .api-panel-heading h2 { font-size: 21px; }
+  .method-section { grid-template-columns: 1fr; gap: 17px; padding: 32px 0; }
+  .method-aside h2 { font-size: 26px; }
+  .privacy-strip { gap: 12px; padding: 17px; }
+  .privacy-symbol { padding: 8px; }
+  .privacy-strip h2 { font-size: 15px; }
+  .site-footer { align-items: start; flex-direction: column; gap: 10px; }
+  #report-draft, #threads-draft { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media print {
+  :root, html[data-theme="dark"] { --ink: #111; --muted: #444; --paper: #fff; --paper-light: #fff; --white: #fff; --line: #ccc; }
+  body { background: #fff; color: #111; }
+  .sidebar, .site-header, .hero, .workspace, .method-section, .privacy-strip, .site-footer, .toast, .skip-link, .nav-backdrop, .assessment-heading > .text-button, .report-actions, .approval-line, .manual-report { display: none !important; }
+  .app-main { margin-left: 0; }
+  .page-shell { width: 100%; }
+  .assessment-panel { border: 0; box-shadow: none; padding: 0; }
+  .score-card { background: #fff; color: #111; border: 1px solid #ccc; }
+  .score-card * { color: #111 !important; }
+  .report-section { border: 0; background: #fff; }
+  #report-draft { color: #111; background: #fff; }
+  .finding { break-inside: avoid; }
+}
+
+/* Semantic result layout and compact details. */
+.api-overview > .api-summary-note, .api-overview > section:last-child { grid-column: 1 / -1; }
+.api-panel-heading { justify-content: flex-start; align-items: center; gap: 7px; font-size: 12px; margin-bottom: 12px; }
+.api-score-card #threads-summary { padding: 0; background: transparent; border: 0; color: #c7decd; margin: 12px 0 0; }
+.api-score-card .api-policy { color: #c7decd; font-size: 9px; }
+.api-stat-grid { margin: 0; }
+.api-stat dt { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 9px; }
+.api-stat dd { margin: 9px 0 0; font-size: 24px; font-weight: 650; color: var(--ink); letter-spacing: -.035em; }
+.api-stat:last-child dd { font-size: 14px; letter-spacing: -.02em; }
+.signal-card { display: block; padding: 0; }
+.signal-title { flex: 1; min-width: 0; font-size: 11px; font-weight: 600; }
+.signal-card .signal-icon { width: 29px; height: 29px; padding: 6px; }
+.signal-card .signal-status { font-size: 7px; }
+.signal-card[open] > summary > .icon:last-child { transform: rotate(180deg); }
+.demo-launch { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 12px; background: var(--paper-light); border: 1px solid var(--line); border-radius: 10px; }
+.demo-launch .demo-label { display: block; max-width: 280px; border: 0; background: transparent; margin: 0; padding: 0; font-size: 9px; color: var(--muted); }
+@media (max-width: 650px) {
+  .demo-launch { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .signal-status { white-space: normal; max-width: 65px; }
+  .api-stat dt { align-items: flex-start; font-size: 8px; }
+}
+
+/* Comfortable product-UI type sizes rather than document microtype. */
+.nav-item { font-size: 12px; min-height: 44px; }
+.breadcrumb { font-size: 12px; }
+.hero-intro { font-size: 14px; }
+.button { font-size: 12px; }
+.hero-meta { font-size: 10px; }
+.section-subtitle, .section-description { font-size: 12px; }
+.intake-heading h3 { font-size: 15px; }
+.intake-heading p, .field-label { font-size: 12px; }
+.platform-choice { font-size: 12px; min-height: 35px; }
+.url-input-wrap input { font-size: 13px; }
+.check-line { font-size: 12px; }
+.field-help, .boundary-note { font-size: 10px; }
+.input-card-title, .signal-fieldset legend { font-size: 12px; }
+.input-card-copy { font-size: 10px; }
+.finding h4, .signal-title { font-size: 12px; }
+.finding-interpretation, .signal-detail, .api-policy { font-size: 11px; }
+.result-tab { font-size: 12px; min-height: 40px; }
+#threads-summary { font-size: 12px; }
+.api-stat dt { font-size: 11px; }
+.evidence-item .finding-context, .finding-context { font-size: 10px; }
+.knowledge-card summary { min-height: 48px; font-size: 12px; }
+.knowledge-card > div, .privacy-strip p:not(.eyebrow) { font-size: 11px; }
+@media (max-width: 650px) {
+  .intake-heading h3 { font-size: 13px; }
+  .intake-heading p { font-size: 11px; }
+  .platform-choice { font-size: 10px; }
+  .result-tab { font-size: 11px; padding: 8px 5px; }
+  .api-stat dt { font-size: 10px; }
+  .url-input-wrap input, .observation-card input, .observation-card select, .observation-card textarea { font-size: 16px; }
+  #report-draft, #threads-draft { font-size: 12px; }
+}
+
+.api-score-card .api-score-number { margin: 8px 0 12px; font-size: 54px; font-weight: 650; line-height: 1.1; letter-spacing: -.05em; color: #efd16a; }
+
+/* Organization evidence intake: manually submitted, session-only case queue. */
+.org-review-section { margin-top: 28px; padding: 28px; background: var(--white); border: 1px solid var(--line); border-radius: 17px; box-shadow: var(--shadow); }
+.org-review-notice { display: flex; gap: 11px; align-items: flex-start; margin: 0 0 17px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 11px; background: var(--green-pale); color: var(--ink); }
+.org-review-notice > .icon { flex: 0 0 auto; width: 18px; height: 18px; color: var(--green); }
+.org-review-notice p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.org-review-notice strong { display: block; margin-bottom: 3px; color: var(--ink); }
+.org-case-form { display: grid; gap: 12px; }
+.org-case-form .intake-heading { margin-bottom: 2px; }
+.org-field { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--white); font: inherit; font-size: 13px; }
+.org-case-form textarea.org-field { resize: vertical; }
+.org-case-fields { display: grid; grid-template-columns: minmax(180px, .7fr) minmax(0, 1.3fr); gap: 12px; }
+.org-case-fields label { min-width: 0; }
+.org-case-form .field-label { margin-bottom: 5px; }
+.org-case-form .form-actions { margin-top: 3px; }
+.org-queue-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 25px 0 12px; }
+.org-queue-header h3 { margin: 0; font-size: 16px; }
+.org-queue-header p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+.org-case-list { display: grid; gap: 10px; }
+.org-case-card { padding: 16px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper-light); }
+.org-case-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.org-case-platform { display: block; margin-bottom: 5px; font-size: 12px; }
+.org-case-profile { display: block; max-width: 660px; overflow-wrap: anywhere; color: var(--green); font-size: 11px; }
+.org-case-state { flex: 0 0 auto; padding: 6px 8px; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: 10px; }
+.org-case-state.is-reviewed { background: var(--green-pale); color: var(--green); }
+.org-case-fact { margin: 13px 0 8px; color: var(--ink); font-size: 13px; line-height: 1.55; }
+.org-case-meta { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 10px; }
+.org-case-context, .org-case-caveat { margin: 9px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.org-case-caveat { padding-top: 8px; border-top: 1px solid var(--line); }
+.org-case-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 13px; }
+.org-case-actions .button { min-height: 36px; font-size: 10px; }
+.org-case-actions .text-button { margin-left: auto; }
+.org-case-include { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font-size: 10px; }
+.org-case-include input { accent-color: var(--green); }
+.org-report-builder { display: grid; gap: 10px; margin-top: 22px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-light); }
+.org-report-builder .org-queue-header { margin: 0 0 5px; }
+.org-report-builder .org-queue-header h3 { font-size: 18px; }
+.org-quality-score { display: grid; place-items: center; min-width: 68px; min-height: 58px; padding: 5px; border: 1px solid var(--line); border-radius: 11px; background: var(--green-pale); color: var(--green); font-size: 23px; font-weight: 700; line-height: 1; }
+.org-quality-score small { display: block; margin-top: 3px; font-size: 8px; font-weight: 550; }
+.org-draft-label { margin-top: 5px; }
+.org-report-builder #org-report-draft { min-height: 210px; resize: vertical; background: var(--white); font: 11px/1.55 var(--mono); }
+.org-report-builder #build-org-report { justify-self: start; }
+.org-report-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.org-report-limit { margin: 0; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; line-height: 1.5; }
+.pathways { margin: 0 0 34px; }
+.pathways-heading { margin: 0 0 16px; }
+.pathways-heading h2 { margin: 0; font-size: clamp(22px, 2.35vw, 29px); font-weight: 700; letter-spacing: -.045em; }
+.pathways-heading > div > p:last-child { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.pathway-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; }
+.pathway-card { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: flex-start; min-height: 268px; overflow: hidden; padding: 26px; border: 1px solid var(--line); border-radius: 19px; background: radial-gradient(ellipse at 0% 100%, rgba(8, 124, 78, .08), transparent 55%), var(--white); box-shadow: 0 7px 26px rgba(20, 57, 37, .045); transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease; }
+.pathway-card::after { position: absolute; z-index: -1; inset: auto -30px -44px auto; width: 170px; height: 170px; border: 1px solid color-mix(in srgb, var(--green) 9%, transparent); border-radius: 50%; content: ''; }
+.pathway-card:hover, .pathway-card:focus-within { transform: translateY(-3px); border-color: color-mix(in srgb, var(--green) 40%, var(--line)); box-shadow: 0 17px 38px rgba(20, 57, 37, .1); }
+.pathway-org { background: radial-gradient(ellipse at 0% 100%, rgba(239, 209, 106, .17), transparent 55%), var(--white); }
+.pathway-org::after { border-color: color-mix(in srgb, var(--warning) 16%, transparent); }
+.pathway-top { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; }
+.pathway-icon { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid color-mix(in srgb, var(--green) 17%, var(--line)); border-radius: 15px; background: linear-gradient(145deg, var(--white), var(--green-pale)); color: var(--green); box-shadow: 0 4px 13px rgba(8, 124, 78, .08); transition: transform 200ms ease; }
+.pathway-card:hover .pathway-icon, .pathway-card:focus-within .pathway-icon { transform: scale(1.06) rotate(-3deg); }
+.pathway-org .pathway-icon { border-color: color-mix(in srgb, var(--warning) 24%, var(--line)); background: linear-gradient(145deg, var(--white), var(--warning-bg)); color: var(--warning); }
+.pathway-icon .icon { width: 19px; height: 19px; }
+.pathway-tag { color: var(--green); font-size: 9px; font-weight: 800; letter-spacing: .11em; }
+.pathway-org .pathway-tag { color: var(--warning); }
+.pathway-card h3 { max-width: 440px; margin: 0 0 9px; font-size: clamp(18px, 1.7vw, 21px); font-weight: 710; letter-spacing: -.04em; }
+.pathway-card > p { max-width: 490px; margin: 0 0 19px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.pathway-card > .button { margin-top: auto; min-height: 46px; padding-inline: 18px; font-size: 12px; }
+.pathway-card > .button .icon { transition: transform 180ms ease; }
+.pathway-card > .button:hover .icon { transform: translateX(3px); }
+.pathway-card > small { display: flex; align-items: center; gap: 7px; margin-top: 13px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.pathway-card > small .icon { width: 13px; height: 13px; color: var(--green); }
+@media (max-width: 700px) {
+  .pathway-grid { grid-template-columns: 1fr; gap: 10px; }
+  .pathway-card { min-height: 220px; padding: 19px; }
+  .pathway-card h3 { font-size: 17px; }
+}
+@media (max-width: 650px) {
+  .org-review-section { padding: 16px; }
+  .org-review-section > .section-heading { flex-direction: column; align-items: flex-start; }
+  .org-case-fields { grid-template-columns: 1fr; gap: 7px; }
+  .org-case-card-head { flex-direction: column; }
+  .org-case-actions .text-button { margin-left: 0; }
+  .org-report-builder { padding: 12px; }
+  .org-report-actions .button { flex: 1; }
+}
+
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Pular para a análise</a>
+  <aside class="sidebar" id="app-sidebar" aria-label="Navegação do Caça BolsoBot">
+    <a class="brand" href="#top" aria-label="Página inicial do Caça BolsoBot">
+      <span class="brand-symbol" data-icon="sparkles"></span>
+      <span class="brand-name">Caça <span>BolsoBot</span><small>ANÁLISE PÚBLICA COM CONTEXTO</small></span>
+    </a>
+    <div class="workspace-label"><span class="workspace-avatar" data-icon="grid"></span><div>Meu workspace<small>Revisão assistida</small></div><span data-icon="chevron-down"></span></div>
+    <p class="nav-caption">NAVEGAÇÃO</p>
+    <nav class="sidebar-nav" aria-label="Navegação principal">
+      <a href="#workspace" class="nav-item is-active" data-nav="workspace"><span data-icon="search"></span>Central de análise<span class="nav-indicator"></span></a>
+      <a href="#organization-review" class="nav-item" data-nav="organization-review"><span data-icon="nodes"></span>Para organizações</a>
+      <button type="button" class="nav-item" id="sidebar-demo"><span data-icon="play"></span>Explorar demonstração<span class="nav-badge">DEMO</span></button>
+      <a href="#method" class="nav-item" data-nav="method"><span data-icon="activity"></span>Processo coletivo</a>
+      <a href="#privacy" class="nav-item" data-nav="privacy"><span data-icon="lock"></span>Privacidade e acesso</a>
+    </nav>
+    <div class="sidebar-note"><span class="sidebar-note-icon" data-icon="shield"></span><strong>Você mantém o controle.</strong><p>A ferramenta organiza indícios. Toda decisão e denúncia permanece humana.</p><span class="safe-badge"><span class="status-dot"></span>Sem denúncias automáticas</span></div>
+    <div class="sidebar-bottom"><span class="session-avatar" data-icon="user"></span><div>Sessão de análise<small>Anotações neste navegador</small></div><span data-icon="lock"></span></div>
+  </aside>
+  <button class="nav-backdrop" id="nav-backdrop" type="button" aria-label="Fechar navegação" hidden></button>
+  <div class="app-main">
+    <header class="site-header">
+      <button type="button" class="icon-button mobile-menu" id="menu-toggle" aria-label="Abrir navegação" aria-controls="app-sidebar" aria-expanded="false"><span data-icon="menu"></span></button>
+      <a class="header-brand" href="#top" aria-label="Caça BolsoBot, página inicial">
+        <span class="brand-symbol header-brand-symbol" data-icon="sparkles"></span>
+        <span class="header-brand-copy"><span class="header-brand-name">Caça <strong>BolsoBot</strong></span><small>Análise pública com contexto</small></span>
+      </a>
+      <div class="breadcrumb"><strong>Central de análise</strong></div>
+      <div class="topbar-actions"><span class="header-status"><span class="status-dot"></span>Revisão humana</span><button type="button" class="icon-button" id="theme-toggle" aria-label="Ativar tema escuro" aria-pressed="false"><span data-icon="moon"></span></button><span class="topbar-avatar" data-icon="user" aria-hidden="true"></span></div>
+    </header>
+    <div class="page-shell">
+      <main id="top">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <p class="eyebrow hero-eyebrow"><span data-icon="sparkles"></span><strong>Caça BolsoBot</strong><i aria-hidden="true"></i><span>DECISÕES HUMANAS</span></p>
+            <h1 id="hero-title">Menos BolsoBot<br><em>Mais real interação.</em></h1>
+            <p class="hero-intro">Reúna evidências públicas sobre possíveis padrões coordenados nas plataformas Meta. Pessoas registram observações; organizações revisam e preparam relatos coletivos.</p>
+            <div class="hero-actions"><a class="button button-primary" href="#organization-review">Reunir evidências<span data-icon="arrow-right"></span></a><button class="button button-soft" type="button" id="hero-demo"><span data-icon="play"></span>Ver demonstração</button><a class="hero-how-link" href="#workspace">Analisar perfil individual<span data-icon="arrow-right"></span></a></div>
+            <div class="hero-meta"><span><span data-icon="lock"></span>Anotações locais</span><span><span data-icon="check-circle"></span>Revisão humana</span></div>
+          </div>
+          <aside class="hero-side" aria-label="Etapas da revisão">
+            <div class="side-card-header"><span class="side-icon" data-icon="nodes"></span><div><strong>Evidência em fluxo coletivo</strong><small>Guardar, revisar, agir em conjunto</small></div><span class="side-live" data-icon="shield"></span></div>
+            <ol class="mini-steps"><li><span data-icon="link"></span><div><strong>Registre a evidência pública</strong><small>Data, fonte e contexto</small></div><span class="step-mini-number">01</span></li><li><span data-icon="lock"></span><div><strong>Organize com a instituição</strong><small>Acesso controlado e histórico</small></div><span class="step-mini-number">02</span></li><li><span data-icon="file"></span><div><strong>Prepare o relato coletivo</strong><small>Envio oficial feito por pessoas</small></div><span class="step-mini-number">03</span></li></ol>
+          </aside>
+        </section>
+
+
+        <section class="impact-section" aria-label="Resumo e missão do Caça BolsoBot">
+          <div class="impact-message"><p class="eyebrow"><span data-icon="nodes"></span> EVIDÊNCIA COLETIVA · META PLATFORMS</p><h2>Organizar relatos. Acompanhar padrões. Agir em conjunto.</h2><p>Reúna evidências públicas sobre possíveis padrões coordenados ou manipulativos que afetem a integridade das conversas no Threads, Instagram e Facebook.</p></div>
+          <div class="impact-metrics">
+            <div class="online-public-summary impact-counter" id="online-public-summary"><div class="impact-metric-label"><span data-icon="chart"></span>RELATOS INSTITUCIONAIS ENVIADOS</div><strong id="online-summary-submitted" aria-live="polite">Contador ao vivo disponível na versão online</strong><small id="online-summary-reviewed">A demonstração offline não contém envios reais.</small><small id="online-summary-reviewed-count">Registros válidos entram no total antes da revisão humana.</small><small>O total pode incluir duplicatas e retiradas; não é uma contagem de bots confirmados. Atualização online em até 10 segundos.</small></div>
+            <div class="top-review-score" id="top-review-score-card" hidden><div class="impact-metric-label"><span data-icon="activity"></span>PRIORIDADE DE REVISÃO · NÃO É PROBABILIDADE</div><strong id="top-review-score">—</strong><span id="top-review-band">Aparece após uma análise individual</span><a href="#assessment-panel">Ver análise completa<span data-icon="arrow-right"></span></a></div>
+          </div>
+        </section>
+        <section class="method-section" id="method" aria-labelledby="method-title"><div class="method-aside"><p class="eyebrow">COMO FUNCIONA</p><h2 id="method-title">Da evidência<br>à ação coletiva.</h2><p>Caça BolsoBot ajuda grupos a reunir evidências públicas sobre possíveis padrões coordenados ou manipulativos que afetem a integridade das conversas no Threads, Instagram e Facebook.</p></div><div class="method-copy"><details class="knowledge-card" open><summary><span data-icon="file"></span>1. Registrar e preservar evidências<span data-icon="chevron-down"></span></summary><div><p>Integrantes registram um perfil público, um exemplo datado, a fonte e o contexto. O objetivo é reunir material verificável para análise conjunta. Uma observação individual completa pode ser reutilizada no formulário institucional para evitar digitar os mesmos dados duas vezes.</p></div></details><details class="knowledge-card"><summary><span data-icon="lock"></span>2. Guardar e acompanhar os registros<span data-icon="chevron-down"></span></summary><div><p>Esta demonstração offline mantém os dados apenas nesta sessão. Na versão online, registros institucionais serão guardados no servidor com acesso restrito a organizações aprovadas e histórico de alterações. Cada envio válido atualiza o total antes da revisão humana; a organização precisa ser aprovada para enviar. O total não mede bots confirmados. As equipes podem acompanhar submissões, revisões, correções e compartilhamentos no Caça BolsoBot.</p></div></details><details class="knowledge-card"><summary><span data-icon="nodes"></span>3. Preparar um relato institucional</summary><div><p>Uma organização revisa as fontes, seleciona os casos e prepara um relatório coletivo para compartilhar com instituições escolhidas e aprovadas. A submissão à Meta é manual, pelos canais oficiais. O site não monitora contas nem acompanha decisões internas da Meta.</p><a href="https://transparency.meta.com/policies/community-standards/" target="_blank" rel="noopener noreferrer">Padrões da Comunidade da Meta<span data-icon="external"></span></a></div></details></div></section>
+
+        <section class="pathways" aria-labelledby="pathways-title">
+          <div class="pathways-heading"><div><p class="eyebrow">COMECE POR AQUI</p><h2 id="pathways-title">Como você quer usar o Caça BolsoBot?</h2><p>Escolha o caminho que combina com você.</p></div></div>
+          <div class="pathway-grid">
+            <article class="pathway-card pathway-user">
+              <div class="pathway-top"><span class="pathway-icon" data-icon="user"></span><span class="pathway-tag">PARA PESSOAS</span></div>
+              <h3>Quero analisar um perfil que pode ser um bot</h3>
+              <p>Registre exemplos públicos, datas e contexto. Revise suas observações antes de decidir o que fazer.</p>
+              <a class="button button-primary" href="#workspace">Começar análise<span data-icon="arrow-right"></span></a>
+              <small><span data-icon="lock"></span>Seu rascunho fica neste navegador.</small>
+            </article>
+            <article class="pathway-card pathway-org">
+              <div class="pathway-top"><span class="pathway-icon" data-icon="nodes"></span><span class="pathway-tag">PARA ORGANIZAÇÕES</span></div>
+              <h3>Quero reunir evidências para um relato coletivo</h3>
+              <p>Organize observações públicas, acompanhe revisões e prepare um relatório institucional para compartilhar com organizações parceiras.</p>
+              <a class="button button-outline" href="#organization-review">Reunir evidências<span data-icon="arrow-right"></span></a>
+              <small><span data-icon="info"></span>A Meta recebe o relato apenas se uma pessoa o enviar pelos canais oficiais.</small>
+            </article>
+          </div>
+        </section>
+
+        <section class="workspace" id="workspace" aria-labelledby="start-title">
+          <div class="section-heading"><div><p class="eyebrow">ANÁLISE INDIVIDUAL</p><h2 id="start-title">Analisar um perfil público</h2><p class="section-subtitle">Escolha uma plataforma e cole o link do perfil para começar.</p></div><span class="privacy-pill"><span data-icon="shield"></span>Nenhuma denúncia é enviada</span></div>
+          <ol class="workflow-stepper" id="workflow-stepper" aria-label="Progresso da revisão"><li class="is-current" data-step="1" aria-current="step"><span class="step-number">01</span><div>Perfil<small>Definir o alvo da análise</small></div></li><li data-step="2"><span class="step-number">02</span><div>Evidências<small>Registrar manualmente</small></div></li><li data-step="3"><span class="step-number">03</span><div>Revisão<small>Conferir o contexto</small></div></li><li data-step="4"><span class="step-number">04</span><div>Rascunho<small>Aprovar por conta própria</small></div></li></ol>
+          <form id="profile-form" class="profile-form" novalidate>
+            <div class="intake-heading"><span class="intake-icon" data-icon="link"></span><div><h3>Qual perfil você quer analisar?</h3><p>Perfis públicos do Threads, Instagram ou Facebook.</p></div><span class="intake-shortcut" id="intake-shortcut">Ctrl K</span></div>
+            <div class="platform-picker" role="group" aria-label="Selecionar plataforma"><button type="button" class="platform-choice is-selected" data-platform="threads" aria-pressed="true"><span class="platform-monogram">@</span>Threads</button><button type="button" class="platform-choice" data-platform="instagram" aria-pressed="false"><span data-icon="instagram"></span>Instagram</button><button type="button" class="platform-choice" data-platform="facebook" aria-pressed="false"><span class="platform-monogram">f</span>Facebook</button></div>
+            <label class="field-label" for="profile-url">Link público do perfil</label>
+            <div class="url-row"><div class="url-input-wrap"><span class="url-glyph" data-icon="link"></span><input id="profile-url" name="profileUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://www.threads.com/@username" required aria-describedby="url-help url-error"><button type="button" class="paste-control" id="paste-link" aria-label="Colar link da área de transferência"><span data-icon="copy"></span>Colar</button></div><button class="button button-primary" type="submit">Continuar<span data-icon="arrow-right"></span></button></div>
+            <p class="field-help" id="url-help">Links de publicações, grupos, stories e links encurtados não são compatíveis.</p><p class="form-error" id="url-error" role="alert" aria-live="polite"></p>
+            <label class="check-line public-confirm"><input id="public-confirm" type="checkbox"><span>Confirmo que o perfil e as informações que pretendo registrar são visíveis pelo acesso público comum. Não são privados nem restritos.</span></label>
+            <p class="boundary-note"><span data-icon="lock"></span>Continuar valida apenas o formato do link. Esta versão não consulta perfis automaticamente; você registra manualmente os fatos públicos que observar.</p>
+          </form>
+
+          <section class="review-panel" id="review-panel" hidden aria-labelledby="observations-title">
+            <div class="profile-ribbon"><span class="profile-ribbon-icon" data-icon="user"></span><span class="platform-chip" id="platform-chip">Plataforma</span><div class="profile-address"><small>PERFIL EM REVISÃO</small><a id="profile-link" href="#" target="_blank" rel="noopener noreferrer"></a></div><button class="text-button" id="change-profile" type="button"><span data-icon="repeat"></span>Alterar link</button></div>
+            <form id="observations-form" novalidate>
+              <div class="section-heading inner-heading"><div><p class="eyebrow">OBSERVAÇÃO MANUAL</p><h2 id="observations-title">O que você observou?</h2></div><span class="quiet-label"><span data-icon="eye"></span>Você registra. Você revisa.</span></div>
+              <p class="section-description">Registre fatos específicos e datados, não conclusões sobre identidade ou intenção. Não inclua informações privadas ou desnecessárias.</p>
+              <div class="metrics-grid"><label class="input-card" for="posts-observed"><span class="input-card-icon" data-icon="file"></span><span class="input-card-title">Publicações na amostra</span><span class="input-card-copy">Quantidade de publicações públicas que você analisou</span><input id="posts-observed" type="number" min="0" max="100000" inputmode="numeric" placeholder="ex.: 24"></label><label class="input-card" for="days-observed"><span class="input-card-icon" data-icon="calendar"></span><span class="input-card-title">Dias de observação</span><span class="input-card-copy">Duração do período de observação</span><input id="days-observed" type="number" min="1" max="3650" inputmode="numeric" placeholder="ex.: 14"></label><label class="input-card" for="repeated-posts"><span class="input-card-icon" data-icon="repeat"></span><span class="input-card-title">Publicações semelhantes</span><span class="input-card-copy">Exemplos identificados pessoalmente como quase duplicados</span><input id="repeated-posts" type="number" min="0" max="100000" inputmode="numeric" placeholder="ex.: 5"></label><label class="input-card" for="bio-status"><span class="input-card-icon" data-icon="user"></span><span class="input-card-title">Detalhes do perfil</span><span class="input-card-copy">Ausência de biografia é um indício fraco</span><select id="bio-status"><option value="unknown">Não verificado</option><option value="present">Biografia visível</option><option value="absent">Nenhuma biografia visível</option></select></label></div>
+              <div class="signal-selectors"><fieldset class="signal-fieldset"><legend>Padrão repetido de engajamento</legend><p>Um padrão específico em várias publicações. Números altos ou baixos, isoladamente, dizem pouco.</p><div class="radio-row"><label><input type="radio" name="engagement" value="unknown" checked><span>Não verificado</span></label><label><input type="radio" name="engagement" value="no"><span>Não observado</span></label><label><input type="radio" name="engagement" value="yes"><span>Observado mais de uma vez</span></label></div></fieldset><fieldset class="signal-fieldset"><legend>Inconsistência de comportamento</legend><p>Uma divergência recorrente e específica entre informações e comportamento públicos. Pode ter explicações legítimas.</p><div class="radio-row"><label><input type="radio" name="inconsistency" value="unknown" checked><span>Não verificado</span></label><label><input type="radio" name="inconsistency" value="no"><span>Não observado</span></label><label><input type="radio" name="inconsistency" value="yes"><span>Observado mais de uma vez</span></label></div></fieldset></div>
+              <div class="evidence-head"><div><h3>Anotações e evidências</h3><p>Um exemplo concreto para cada indício que você deseja incluir.</p></div><button class="button button-outline" type="button" id="add-observation"><span data-icon="plus"></span>Adicionar observação</button></div>
+              <div class="empty-observations" id="empty-observations"><span data-icon="file"></span><strong>Comece com um fato, não uma conclusão.</strong><p>Adicione uma data, um exemplo público e um possível contexto legítimo.</p></div>
+              <div id="observations-list" class="observations-list" aria-live="polite"></div><p class="form-error" id="observations-error" role="alert" aria-live="polite"></p><div class="form-actions"><button class="button button-primary" type="submit"><span data-icon="activity"></span>Gerar análise</button><span class="quiet-label">Você pode editar ou descartar as anotações. Depois, reutilize uma observação no relato coletivo sem preencher os mesmos dados novamente.</span></div>
+            </form>
+          </section>
+        </section>
+
+        <section class="org-review-section" id="organization-review" aria-labelledby="organization-review-title">
+          <div class="section-heading"><div><p class="eyebrow">ESPAÇO INSTITUCIONAL</p><h2 id="organization-review-title">Evidências para ação coletiva</h2><p class="section-subtitle">Registre cada caso uma vez, mantenha o histórico e prepare um relatório institucional dirigido à Meta.</p></div><span class="privacy-pill"><span data-icon="lock"></span>Demonstração offline</span></div>
+          <div class="org-review-notice"><span data-icon="shield"></span><p><strong>Modo demonstração, guardado nesta sessão.</strong> Esta fila local não é enviada ao servidor nem compartilhada. Registre cada evidência uma vez; use o botão de reutilização para evitar redigitar os mesmos dados no relato coletivo. Nenhuma denúncia é enviada.</p></div>
+          <form id="org-case-form" class="profile-form org-case-form" novalidate>
+            <div class="intake-heading"><span class="intake-icon" data-icon="file"></span><div><h3>Adicionar indicação para revisão</h3><p>Um perfil público e um exemplo específico por caso.</p></div></div>
+            <label class="field-label" for="org-profile-url">Link público do perfil</label>
+            <input class="org-field" id="org-profile-url" type="url" placeholder="https://www.threads.com/@username" required>
+            <label class="check-line"><input id="org-public-confirm" type="checkbox"><span>Confirmo que este perfil e a evidência podem ser vistos pelo acesso público comum e que a equipe tem motivo legítimo para registrar esta indicação.</span></label>
+            <div class="org-case-fields"><label><span class="field-label">Data em que a equipe observou</span><input class="org-field" id="org-observed-date" type="date" required></label><label><span class="field-label">Link de uma publicação pública relacionada</span><input class="org-field" id="org-evidence-url" type="url" placeholder="https://…" required></label></div>
+            <label class="field-label" for="org-corroborating-url">Outra fonte pública independente (opcional)</label>
+            <input class="org-field" id="org-corroborating-url" type="url" placeholder="https://…">
+            <label class="field-label" for="org-observation">Fato observado</label>
+            <textarea class="org-field" id="org-observation" rows="3" maxlength="500" placeholder="Descreva o comportamento visível, com contexto. Evite concluir que a conta é um bot." required></textarea>
+            <label class="field-label" for="org-context">Contexto alternativo ou informação que contraria a preocupação (opcional)</label>
+            <textarea class="org-field" id="org-context" rows="2" maxlength="400" placeholder="Ex.: a conta informa que publica atualizações automatizadas de serviço."></textarea>
+            <p class="form-error" id="org-case-error" role="alert" aria-live="polite"></p>
+            <div class="form-actions"><button class="button button-primary" type="submit"><span data-icon="plus"></span>Adicionar à fila</button><span class="quiet-label">Dados locais desta sessão; desaparecem ao recarregar. Para segurança entre usuários, será necessário armazenamento autenticado no servidor.</span></div>
+          </form>
+          <div class="org-queue-header"><div><h3>Casos recebidos</h3><p>Indicações aguardando conferência por uma pessoa da organização. Casos revisados ficam bloqueados nesta sessão; correções devem ser registradas como novo caso.</p></div><span class="finding-count" id="org-case-count">0 casos</span></div>
+          <div id="org-case-list" class="org-case-list" aria-live="polite"><p class="findings-empty" id="org-case-empty">Nenhuma indicação nesta sessão. Adicione um caso para começar a revisão.</p></div>
+          <section class="org-report-builder" aria-labelledby="org-report-title">
+            <div class="org-queue-header"><div><p class="eyebrow">RASCUNHO FORMAL PARA META</p><h3 id="org-report-title">Preparar relatório coletivo</h3><p>Inclui somente casos selecionados e revisados nesta sessão. A submissão é manual.</p></div><span class="org-quality-score" id="org-quality-score" aria-live="polite">—<small>completude</small></span></div>
+            <label class="field-label" for="org-report-sender">Organização responsável pelo relato</label>
+            <input class="org-field" id="org-report-sender" type="text" maxlength="120" placeholder="Nome oficial da organização">
+            <label class="field-label" for="org-report-recipients">Organizações selecionadas para receber este rascunho</label>
+            <textarea class="org-field" id="org-report-recipients" rows="2" maxlength="500" placeholder="Digite os nomes das organizações, separados por vírgula"></textarea>
+            <p class="field-help">Os nomes aparecem no documento como colaboradores/destinatários pretendidos. Nada será enviado ou compartilhado por esta página.</p>
+            <button class="button button-primary" type="button" id="build-org-report"><span data-icon="file"></span>Gerar rascunho para Meta</button>
+            <label class="field-label org-draft-label" for="org-report-draft">Rascunho para revisão institucional</label>
+            <textarea class="org-field" id="org-report-draft" rows="12" readonly placeholder="Selecione casos revisados e gere um rascunho."></textarea>
+            <label class="check-line"><input id="org-report-approved" type="checkbox" disabled><span>Revisei cada caso incluído, confirmei que os fatos estão corretos e autorizo exportar este rascunho.</span></label>
+            <div class="org-report-actions"><button class="button button-outline" type="button" id="download-org-report" disabled><span data-icon="download"></span>Baixar rascunho</button><button class="button button-outline" type="button" id="copy-org-report" disabled><span data-icon="copy"></span>Copiar rascunho</button><span class="quiet-label" id="org-report-status" aria-live="polite">A exportação requer revisão humana.</span></div>
+            <p class="org-report-limit">O indicador mede apenas a completude dos registros; não mede a probabilidade de automação nem confirma uma violação. O documento é um rascunho formal; uma pessoa deve enviá-lo pelo canal oficial da plataforma correspondente. Esta página não tem uma função de envio para a Meta.</p>
+          </section>
+        </section>
+
+        <section class="assessment-panel" id="assessment-panel" hidden aria-labelledby="assessment-title">
+          <div class="section-heading assessment-heading"><div><p class="eyebrow">REVISÃO HUMANA</p><h2 id="assessment-title">Indícios, não um veredito.</h2></div><button class="text-button" id="edit-observations" type="button"><span data-icon="repeat"></span>Editar observações</button></div>
+          <div class="assessment-layout"><div class="score-card"><div class="score-topline"><span>PRIORIDADE DE REVISÃO</span><span class="score-stamp">NÃO É PROBABILIDADE</span></div><div class="score-value" id="score-value">—<small>/ 100</small></div><div class="score-band" id="score-band">Informações insuficientes</div><p id="score-explainer">Adicione observações para ver um resumo cauteloso.</p><div class="confidence-row"><span>Completude das observações</span><strong id="confidence-value">Baixo</strong></div><div class="confidence-meter"><span id="confidence-meter-fill"></span></div><p class="confidence-caption" id="confidence-caption">Descreve os detalhes registrados, não se a conta é automatizada.</p></div><div class="findings-column"><div class="findings-title"><div><span class="eyebrow">INDÍCIO POR INDÍCIO</span><h3>O que seus registros mostram</h3></div><span class="finding-count" id="finding-count">0 indícios</span></div><div id="findings-list" class="findings-list"></div></div></div>
+          <div class="collective-transfer"><div><strong>Reutilizar uma observação no relato coletivo</strong><p>Transfere a primeira observação completa para o formulário institucional. Confira tudo antes de salvar; nada é enviado automaticamente.</p></div><button class="button button-outline" id="reuse-in-collective-report" type="button"><span data-icon="arrow-right"></span>Reutilizar dados</button><p id="collective-transfer-status" class="field-help" role="status" aria-live="polite"></p></div><div class="missing-callout" id="missing-callout"></div><div class="review-guard"><span data-icon="alert"></span><p><strong>Confira antes de usar:</strong> verifique datas e detalhes, considere explicações comuns e remova observações incertas. A pontuação é uma heurística de organização não verificada de forma independente.</p></div>
+          <section class="report-section" aria-labelledby="report-title"><div class="report-heading"><div><p class="eyebrow">RASCUNHO DE DENÚNCIA</p><h3 id="report-title">Seu texto. Sua revisão.</h3><p>Mantenha o rascunho factual. Uma denúncia deve apontar uma violação específica, não apenas a suspeita de automação.</p></div><span class="editable-badge"><span data-icon="file"></span>EDITÁVEL</span></div><label class="field-label" for="report-draft">Resumo para revisão</label><textarea id="report-draft" rows="12" spellcheck="true" aria-describedby="report-help"></textarea><p class="field-help" id="report-help">Revise antes de copiar ou baixar. Nenhuma denúncia é enviada.</p><label class="check-line approval-line"><input id="review-approved" type="checkbox"><span>Revisei este rascunho e confirmei que ele reflete com precisão apenas o que observei.</span></label><p class="form-error" id="approval-error" role="alert" aria-live="polite"></p><div class="report-actions"><button class="button button-primary" type="button" id="download-report" disabled><span data-icon="download"></span>Baixar análise .txt</button><button class="button button-outline" type="button" id="copy-report" disabled><span data-icon="copy"></span>Copiar texto</button><span class="quiet-label" id="copy-status" aria-live="polite">Aprove o rascunho para habilitar estas ações.</span></div></section>
+          <section class="manual-report" id="manual-report" aria-labelledby="manual-report-title"><div class="manual-report-head"><div><p class="eyebrow">PRÓXIMO PASSO · SOMENTE MANUAL</p><h3 id="manual-report-title">Se você decidir denunciar</h3></div><span class="manual-tag"><span data-icon="shield"></span>Você no controle</span></div><p>A plataforma decide o que viola suas políticas. Abra o perfil, escolha a opção de denúncia e um motivo que corresponda ao comportamento real. Esta ferramenta não abre um formulário preenchido nem envia denúncias.</p><div class="official-links" id="official-links"></div><div class="report-followup" id="manual-report-followup" hidden><div class="report-followup-intro"><span class="report-followup-icon" data-icon="check-circle"></span><div><strong>Depois de voltar da plataforma</strong><p>Registre se você enviou a denúncia ou decidiu não enviá-la. Isso só salva sua escolha nesta página.</p></div></div><div class="report-status-actions" id="manual-report-status-actions"><button class="button button-primary" type="button" id="manual-report-submitted"><span data-icon="check-circle"></span>Marcar como enviada</button><button class="button button-outline" type="button" id="manual-report-not-submitted"><span data-icon="x"></span>Marcar como não enviada</button></div><div class="report-status-result" id="manual-report-status" role="status" aria-live="polite" hidden><span data-icon="check-circle"></span><div><strong id="manual-report-status-title"></strong><p id="manual-report-status-detail"></p></div><button class="text-button" type="button" id="manual-report-status-reset">Alterar registro</button></div><p class="report-status-note">O registro fica apenas nesta página e desaparece ao recarregá-la. Não confirma que a plataforma recebeu a denúncia ou tomou alguma medida.</p></div><div class="report-caution">Não envie denúncias repetidas ou coordenadas. Uma prioridade elevada não é motivo suficiente para denunciar.</div></section>
+        </section>
+
+        
+        <section class="privacy-strip" id="privacy" aria-labelledby="privacy-title"><span class="privacy-symbol" data-icon="lock"></span><div><p class="eyebrow">PRIVACIDADE E ACESSO</p><h2 id="privacy-title">Acesso restrito, uso responsável.</h2><p>Esta demonstração local não envia registros ao servidor e os perde ao recarregar a página. No modo online, os dados institucionais ficam armazenados no servidor e acessíveis apenas a integrantes autorizados; a retenção depende da configuração do serviço. Relatórios baixados podem sair do controle do site. Registre apenas informações públicas necessárias e evite dados sensíveis. Caça BolsoBot não envia denúncias à Meta nem verifica alegações de forma independente.</p></div><span class="privacy-badge"><span data-icon="lock"></span>Acesso por organização</span></section>
+      </main>
+      <footer class="site-footer"><span>Caça BolsoBot · Uma ferramenta de contexto, não de condenação.</span><a href="#top">Voltar ao topo<span data-icon="arrow-up-right"></span></a></footer>
+    </div>
+  </div>
+  <div class="toast" id="ui-toast" role="status" aria-live="polite" hidden><span data-icon="info"></span><span id="ui-toast-text"></span></div>
+  <template id="observation-template"><article class="observation-card"><div class="observation-card-top"><span class="observation-number">OBSERVAÇÃO</span><button type="button" class="remove-observation" aria-label="Remover observação"><span data-icon="trash"></span>Remover</button></div><div class="observation-fields"><label><span>Data da observação</span><input class="obs-date" type="date"></label><label><span>Categoria do indício</span><select class="obs-category"><option value="cadence">Frequência de publicação</option><option value="repetition">Conteúdo repetido</option><option value="engagement">Padrão de engajamento</option><option value="inconsistency">Inconsistência de comportamento</option><option value="profile">Detalhe do perfil</option><option value="other">Outro contexto</option></select></label></div><label class="observation-text"><span>O que você observou?</span><textarea class="obs-fact" rows="2" maxlength="500" placeholder="Exemplo: cinco publicações usaram a mesma legenda em três dias."></textarea></label><label class="observation-text"><span>Possível contexto ou evidência em sentido contrário <small>(opcional)</small></span><textarea class="obs-context" rows="2" maxlength="500" placeholder="Exemplo: a conta se identifica como organizadora de eventos."></textarea></label><label class="observation-text"><span>Referência de publicação pública <small>(opcional; nunca aberta automaticamente)</small></span><input class="obs-reference" type="url" placeholder="https://…"></label></article></template>
+
+<script>
+(() => {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const paths = {
+    shield: ['M12 3 3.5 6.5v5c0 5 4.1 8 8.5 9.5 4.4-1.5 8.5-4.5 8.5-9.5v-5L12 3Z', 'm8 12 2.5 2.5L16 9'],
+    activity: ['M3 12h4l3-8 4 16 3-8h4'],
+    check: ['m5 12 4 4L19 6'],
+    link: ['M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2', 'M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2'],
+    'arrow-right': ['M4 12h16', 'm13 5 7 7-7 7'],
+    'arrow-up-right': ['M6 18 18 6', 'M6 6h12v12'],
+    'chevron-down': ['m6 9 6 6 6-6'],
+    'chevron-right': ['m9 6 6 6-6 6'],
+    plus: ['M12 5v14', 'M5 12h14'],
+    trash: ['M3 6h18', 'M9 6V3h6v3', 'm5 6 1 15h12l1-15', 'M10 10v7', 'M14 10v7'],
+    download: ['M12 3v12', 'm7 10 5 5 5-5', 'M4 16v5h16v-5'],
+    copy: ['M8 8h13v13H8Z', 'M16 8V3H3v13h5'],
+    eye: ['M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z', 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0'],
+    lock: ['M5 10h14v11H5Z', 'M8 10V6a4 4 0 0 1 8 0v4', 'M12 14v3'],
+    sparkles: ['m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z', 'M20 2v4', 'M18 4h4'],
+    play: ['M9 5v14l11-7L9 5Z'],
+    moon: ['M21 13a9 9 0 0 1-10-10 9 9 0 1 0 10 10Z'],
+    sun: ['M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0', 'M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5'],
+    menu: ['M4 6h16M4 12h16M4 18h16'],
+    x: ['m6 6 12 12', 'M18 6 6 18'],
+    info: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', 'M12 11v6', 'M12 7h.01'],
+    alert: ['m12 3 10 18H2L12 3Z', 'M12 9v5', 'M12 17h.01'],
+    clock: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', 'M12 7v5l3 2'],
+    calendar: ['M3 5h18v16H3Z', 'M7 3v4M17 3v4M3 10h18', 'M7 14h2M13 14h2M7 17h2'],
+    repeat: ['m17 2 4 4-4 4', 'M3 11V6h18', 'm7 22-4-4 4-4', 'M21 13v5H3'],
+    chart: ['M4 3v18h17', 'M8 16v-5M13 16V7M18 16v-8'],
+    filter: ['M3 4h18l-7 8v7l-4 2v-9L3 4Z'],
+    grid: ['M3 3h7v7H3ZM14 3h7v7h-7ZM3 14h7v7H3ZM14 14h7v7h-7Z'],
+    file: ['M14 2H4v20h16V8l-6-6Z', 'M14 2v6h6', 'M8 12h8M8 16h8'],
+    settings: ['M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8', 'M10 2h4l1 3 3 1 3-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-2v-3L1 9l2-4 3 1 3-1 1-3Z'],
+    user: ['M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0', 'M4 21v-2a8 8 0 0 1 16 0v2'],
+    logout: ['M9 3H3v18h6', 'M9 12h12', 'm16 7 5 5-5 5'],
+    external: ['M14 3h7v7', 'm10 14 11-11', 'M10 3H3v18h18v-7'],
+    'check-circle': ['M21 11v1a9 9 0 1 1-5.3-8.2', 'm8 11 4 4 9-10'],
+    nodes: ['M6 6h.01M18 6h.01M12 18h.01', 'M8 6h8M7 8l4 8M17 8l-4 8', 'M8 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0M20 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0M14 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0'],
+    bell: ['M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9', 'M10 21h4'],
+    search: ['M19 10.5a8.5 8.5 0 1 1-17 0 8.5 8.5 0 0 1 17 0', 'm17 17 5 5'],
+    instagram: ['M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Z', 'M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0', 'M17 7h.01'],
+  };
+  function create(name, className = 'icon') {
+    const svg = document.createElementNS(NS, 'svg');
+    for (const [key, value] of Object.entries({ viewBox: '0 0 24 24', width: '24', height: '24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', focusable: 'false', class: className })) svg.setAttribute(key, value);
+    (paths[name] || paths.info).forEach((data) => {
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', data);
+      svg.append(path);
+    });
+    return svg;
+  }
+  function decorate(root = document) {
+    root.querySelectorAll('[data-icon]').forEach((element) => {
+      if (element.dataset.iconReady === 'true') return;
+      element.dataset.iconReady = 'true';
+      element.replaceChildren(create(element.dataset.icon));
+    });
+  }
+  window.SignalIcons = Object.freeze({ create, decorate });
+})();
+
+</script>
+<script>
+(() => {
+  'use strict';
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const state = { profile: null, platform: null, reportFollowupStarted: false, reportStatus: null, orgCases: [] };
+  const profileForm = $('#profile-form');
+  const profilePanel = $('#review-panel');
+  const observationsForm = $('#observations-form');
+  const assessmentPanel = $('#assessment-panel');
+  const observationTemplate = $('#observation-template');
+  const observationsList = $('#observations-list');
+
+  const reporting = {
+    facebook: {
+      title: 'Central de Ajuda do Facebook: denunciar um perfil',
+      url: 'https://www.facebook.com/help/171757096241231',
+      steps: 'Abra o perfil, selecione Opções e depois Denunciar perfil. Escolha o motivo que melhor descreve a violação específica das políticas e siga as instruções da Meta.'
+    },
+    instagram: {
+      title: 'Central de Ajuda do Instagram: denunciar um perfil',
+      url: 'https://help.instagram.com/192435014247952',
+      steps: 'Abra o perfil, selecione Opções ao lado do nome de usuário e depois Denunciar. Escolha o motivo aplicável à conta ou ao conteúdo e siga as instruções da Meta.'
+    },
+    threads: {
+      title: 'Central de Ajuda do Threads: denunciar um perfil',
+      url: 'https://help.instagram.com/6602413966453273/',
+      steps: 'Abra o perfil, selecione Opções abaixo da foto do perfil e depois Denunciar. Escolha o motivo que melhor corresponde ao conteúdo ou comportamento específico.'
+    }
+  };
+
+  function resetReportFollowup() {
+    state.reportFollowupStarted = false;
+    state.reportStatus = null;
+    $('#manual-report-followup').hidden = true;
+    $('#manual-report-status-actions').hidden = false;
+    $('#manual-report-status').hidden = true;
+    $('#manual-report-status').removeAttribute('data-status');
+    $('#manual-report-status-title').textContent = '';
+    $('#manual-report-status-detail').textContent = '';
+  }
+
+  function revealReportFollowup() {
+    state.reportFollowupStarted = true;
+    $('#manual-report-followup').hidden = false;
+  }
+
+  function recordReportStatus(submitted) {
+    const platformNames = { facebook: 'Facebook', instagram: 'Instagram', threads: 'Threads' };
+    const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date());
+    state.reportStatus = { submitted, date, platform: state.platform };
+    const result = $('#manual-report-status');
+    result.dataset.status = submitted ? 'submitted' : 'not-submitted';
+    const statusIcon = $('[data-icon]', result);
+    statusIcon.dataset.icon = submitted ? 'check-circle' : 'info';
+    statusIcon.dataset.iconReady = 'false';
+    window.SignalIcons?.decorate(result);
+    $('#manual-report-status-title').textContent = submitted
+      ? 'Você marcou a denúncia como enviada.'
+      : 'Você marcou que não enviou a denúncia.';
+    $('#manual-report-status-detail').textContent = `${platformNames[state.platform]} · ${date}. Este registro local não confirma o recebimento nem a decisão da plataforma.`;
+    $('#manual-report-status-actions').hidden = true;
+    result.hidden = false;
+  }
+
+  const reserved = new Set([
+    'about', 'accounts', 'explore', 'direct', 'stories', 'story', 'reel', 'reels', 'p', 'tv',
+    'groups', 'pages', 'events', 'watch', 'marketplace', 'gaming', 'business', 'help', 'login',
+    'share', 'photo.php', 'posts', 'videos', 'permalink.php', 'settings', 'friends', 'me',
+    'notifications', 'messages', 'search', 'hashtag', 'privacy', 'terms', 'directory',
+  ]);
+
+  function parseProfileUrl(raw) {
+    let value = raw.trim();
+    if (!value) return { error: 'Cole o link de um perfil para continuar.' };
+    if (!/^https?:\/\//i.test(value)) value = `https://${value}`;
+
+    let url;
+    try {
+      url = new URL(value);
+    } catch {
+      return { error: 'Esse link não parece ser um endereço válido da web.' };
+    }
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || (url.port && !['80', '443'].includes(url.port))) {
+      return { error: 'Use um link padrão de perfil público, sem dados de acesso nem porta personalizada.' };
+    }
+
+    const host = url.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '');
+    let platform;
+    if (host === 'facebook.com') platform = 'facebook';
+    else if (host === 'instagram.com') platform = 'instagram';
+    else if (['threads.net', 'threads.com'].includes(host)) platform = 'threads';
+    else return { error: 'Os links compatíveis devem usar facebook.com, instagram.com, threads.net ou threads.com.' };
+
+    const parts = url.pathname.split('/').filter(Boolean);
+    const first = (parts[0] || '').toLowerCase();
+    let isProfile = false;
+    if (platform === 'facebook') {
+      if (first === 'profile.php') {
+        isProfile = Boolean(url.searchParams.get('id')) && parts.length === 1;
+        if (isProfile) {
+          const id = url.searchParams.get('id');
+          url.search = '';
+          url.searchParams.set('id', id);
+        }
+      } else if (first === 'people' && parts.length === 3) {
+        isProfile = /^\d+$/.test(parts[2]);
+        url.search = '';
+      } else {
+        isProfile = parts.length === 1 && /^[a-z0-9.]+$/i.test(parts[0]) && !reserved.has(first);
+        url.search = '';
+      }
+    } else if (platform === 'instagram') {
+      isProfile = parts.length === 1 && /^[a-z0-9._]+$/i.test(parts[0]) && !reserved.has(first);
+      url.search = '';
+    } else {
+      isProfile = parts.length === 1 && /^@[a-z0-9._]+$/i.test(parts[0]);
+      url.search = '';
+    }
+
+    if (!isProfile) return { error: 'Esse link parece ser de uma publicação, conteúdo, grupo ou página não compatível. Cole um link de perfil compatível.' };
+    url.hash = '';
+    url.protocol = 'https:';
+    return { profile: url.href, platform };
+  }
+
+  function showError(element, message) {
+    element.textContent = message;
+  }
+
+  const orgCaseForm = $('#org-case-form');
+  const orgCaseList = $('#org-case-list');
+  const orgPlatforms = { facebook: 'Facebook', instagram: 'Instagram', threads: 'Threads' };
+
+  function orgCasePayload(item) {
+    return JSON.stringify({ id: item.id, profile: item.profile, platform: item.platform, date: item.date, evidenceUrl: item.evidenceUrl, fact: item.fact, corroboratingUrl: item.corroboratingUrl, context: item.context });
+  }
+
+  async function fingerprintOrgCase(item) {
+    const bytes = new TextEncoder().encode(orgCasePayload(item));
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function verifyOrgCase(item) {
+    return Boolean(item.fingerprint && item.fingerprint === await fingerprintOrgCase(item));
+  }
+
+  function renderOrgCases() {
+    const empty = $('#org-case-empty');
+    empty.hidden = state.orgCases.length > 0;
+    $('#org-case-count').textContent = `${state.orgCases.length} ${state.orgCases.length === 1 ? 'caso' : 'casos'}`;
+    $$('.org-case-card', orgCaseList).forEach((card) => card.remove());
+    state.orgCases.forEach((item) => {
+      const card = document.createElement('article');
+      card.className = 'org-case-card';
+      const head = document.createElement('div');
+      head.className = 'org-case-card-head';
+      const identity = document.createElement('div');
+      const title = appendText(identity, 'strong', '', orgPlatforms[item.platform]);
+      title.className = 'org-case-platform';
+      appendText(identity, 'a', 'org-case-profile', item.profile).href = item.profile;
+      const badge = appendText(head, 'span', `org-case-state${item.reviewed ? ' is-reviewed' : ''}`, item.reviewed ? 'Revisão concluída' : 'Aguardando revisão');
+      badge.setAttribute('aria-label', item.reviewed ? 'Uma pessoa concluiu a revisão deste caso' : 'Este caso aguarda revisão humana');
+      head.prepend(identity);
+      card.append(head);
+      appendText(card, 'p', 'org-case-fact', item.fact);
+      const meta = document.createElement('div');
+      meta.className = 'org-case-meta';
+      appendText(meta, 'span', '', `Observado em ${item.date}`);
+      const evidence = appendText(meta, 'a', '', 'Abrir evidência pública ↗');
+      evidence.href = item.evidenceUrl;
+      evidence.target = '_blank';
+      evidence.rel = 'noopener noreferrer';
+      if (item.corroboratingUrl) {
+        const corroboration = appendText(meta, 'a', '', 'Abrir fonte complementar ↗');
+        corroboration.href = item.corroboratingUrl;
+        corroboration.target = '_blank';
+        corroboration.rel = 'noopener noreferrer';
+      }
+      card.append(meta);
+      if (item.context) appendText(card, 'p', 'org-case-context', `Contexto alternativo: ${item.context}`);
+      appendText(card, 'p', 'org-case-caveat', 'A indicação não confirma automação ou violação. Confira as fontes e considere explicações legítimas.');
+      const actions = document.createElement('div');
+      actions.className = 'org-case-actions';
+      const profileLink = appendText(actions, 'a', 'button button-outline', 'Abrir perfil');
+      profileLink.href = item.profile;
+      profileLink.target = '_blank';
+      profileLink.rel = 'noopener noreferrer';
+      const reviewButton = document.createElement('button');
+      reviewButton.type = 'button';
+      reviewButton.className = 'button button-soft';
+      reviewButton.textContent = item.reviewed ? 'Registro selado após revisão' : 'Marcar revisão concluída';
+      reviewButton.disabled = item.reviewed;
+      if (item.reviewed) reviewButton.title = 'Para corrigir, registre um novo caso e mantenha este registro original.';
+      reviewButton.addEventListener('click', async () => {
+        if (item.reviewed) return;
+        reviewButton.disabled = true;
+        reviewButton.textContent = 'Calculando impressão digital…';
+        try {
+          item.fingerprint = await fingerprintOrgCase(item);
+          item.reviewed = true;
+          clearOrgReport();
+          renderOrgCases();
+        } catch {
+          reviewButton.disabled = false;
+          reviewButton.textContent = 'Falha ao selar — tente novamente';
+        }
+      });
+      actions.append(reviewButton);
+      if (item.reviewed) {
+        const includeLabel = document.createElement('label');
+        includeLabel.className = 'org-case-include';
+        const includeBox = document.createElement('input');
+        includeBox.type = 'checkbox';
+        includeBox.checked = Boolean(item.included);
+        includeBox.addEventListener('change', () => { item.included = includeBox.checked; clearOrgReport(); });
+        includeLabel.append(includeBox, document.createTextNode('Incluir no rascunho coletivo'));
+        actions.append(includeLabel);
+        const exportButton = document.createElement('button');
+        exportButton.type = 'button';
+        exportButton.className = 'button button-primary';
+        exportButton.textContent = 'Baixar ficha revisada';
+        exportButton.addEventListener('click', () => downloadOrgCase(item));
+        actions.append(exportButton);
+      }
+      const removeButton = document.createElement('button');
+      removeButton.type = 'button';
+      removeButton.className = 'text-button';
+      removeButton.textContent = 'Excluir';
+      removeButton.setAttribute('aria-label', 'Excluir este caso da fila');
+      removeButton.disabled = item.reviewed;
+      if (item.reviewed) removeButton.title = 'Registros revisados ficam bloqueados nesta sessão.';
+      removeButton.addEventListener('click', () => { if (item.reviewed) return; state.orgCases = state.orgCases.filter((entry) => entry.id !== item.id); clearOrgReport(); renderOrgCases(); });
+      actions.append(removeButton);
+      card.append(actions);
+      orgCaseList.append(card);
+    });
+  }
+
+  function clearOrgReport() {
+    $('#org-report-draft').value = '';
+    $('#org-report-approved').checked = false;
+    $('#org-report-approved').disabled = true;
+    $('#download-org-report').disabled = true;
+    $('#copy-org-report').disabled = true;
+    $('#org-quality-score').innerHTML = '—<small>completude</small>';
+    $('#org-report-status').textContent = 'Atualize o rascunho após alterar a seleção de casos.';
+  }
+
+  async function buildOrgReport() {
+    const cases = state.orgCases.filter((item) => item.reviewed && item.included);
+    const sender = $('#org-report-sender').value.trim();
+    const recipients = $('#org-report-recipients').value.split(/[\n,;]+/).map((name) => name.trim()).filter(Boolean);
+    if (!sender) {
+      $('#org-report-status').textContent = 'Informe a organização responsável para preparar um relato institucional.';
+      $('#org-report-sender').focus();
+      return;
+    }
+    if (!recipients.length) {
+      $('#org-report-status').textContent = 'Informe pelo menos uma organização destinatária para identificar o rascunho.';
+      $('#org-report-recipients').focus();
+      return;
+    }
+    if (!cases.length) {
+      $('#org-report-status').textContent = 'Marque pelo menos um caso como revisado e selecione-o para o rascunho.';
+      return;
+    }
+    $('#build-org-report').disabled = true;
+    $('#org-report-status').textContent = 'Conferindo integridade dos registros selados…';
+    const integrity = await Promise.all(cases.map(verifyOrgCase));
+    $('#build-org-report').disabled = false;
+    if (integrity.some((valid) => !valid)) {
+      $('#org-report-status').textContent = 'Falha na conferência: um registro selado mudou. Não exporte; recarregue a página e confira a origem.';
+      return;
+    }
+    const platforms = new Set(cases.map((item) => item.platform));
+    if (platforms.size !== 1) {
+      $('#org-report-status').textContent = 'Prepare um relatório por plataforma. Selecione casos do Facebook, Instagram ou Threads, não uma mistura.';
+      return;
+    }
+    const platform = cases[0].platform;
+    const platformName = orgPlatforms[platform];
+    const metaRoute = reporting[platform];
+    const score = Math.round(cases.reduce((total, item) => total + [item.date, item.evidenceUrl, item.fact, item.corroboratingUrl, item.context, item.reviewed].filter(Boolean).length / 6, 0) / cases.length * 100);
+    const lines = [
+      'RASCUNHO FORMAL DE RELATO — META',
+      `À equipe responsável por ${platformName} na Meta,`,
+      `Organização responsável pelo relato: ${sender}`,
+      `Organizações colaboradoras/destinatárias pretendidas: ${recipients.length ? recipients.join('; ') : 'Nenhuma indicada'}`,
+      `Plataforma abrangida por este documento: ${platformName}`,
+      `Casos incluídos: ${cases.length}`,
+      `Completude documental: ${score}% (mede campos registrados, não autenticidade, automação ou violação)`,
+      `Preparado em: ${new Date().toLocaleString('pt-BR')}`,
+      'Integridade: impressões digitais SHA-256 calculadas após revisão humana; detectam alterações posteriores no conteúdo incluído, mas não confirmam a veracidade da observação nem a identidade de quem a registrou.',
+      '',
+      'ASSUNTO: Solicitação de análise de conteúdo/perfis públicos com evidências anexas',
+      '',
+      'Prezada equipe da Meta,',
+      '',
+      `A organização ${sender} solicita uma análise independente dos exemplos públicos listados abaixo, à luz das políticas aplicáveis de ${platformName}. Este relato foi preparado a partir de observações e links fornecidos manualmente; não utilizou consulta à Threads API nesta fila.`,
+      '',
+      'ESCOPO E LIMITAÇÕES',
+      'Este documento não afirma que qualquer perfil seja automatizado, coordenado ou infrinja regras. Os registros podem estar incompletos e precisam ser conferidos pela equipe revisora. A organização solicita apenas que a Meta avalie os exemplos e determine se há violação específica de política. A decisão de moderação pertence à Meta.',
+    ];
+    cases.forEach((item, index) => {
+      const gaps = [];
+      if (!item.corroboratingUrl) gaps.push('sem fonte complementar');
+      if (!item.context) gaps.push('contexto alternativo não registrado');
+      lines.push('', `CASO ${index + 1} — ${orgPlatforms[item.platform]}`, `Perfil público: ${item.profile}`, `Publicação/exemplo público: ${item.evidenceUrl}`, `Fonte complementar: ${item.corroboratingUrl || 'Não informada'}`, `Data observada: ${item.date}`, `Fato relatado pela equipe: ${item.fact}`, `Contexto alternativo: ${item.context || 'Não informado'}`, `Impressão digital SHA-256: ${item.fingerprint}`, `Revisão humana: concluída nesta sessão${gaps.length ? `; pendências: ${gaps.join(', ')}` : '; fontes complementares e contexto registrados'}`);
+    });
+    lines.push('', 'CANAL OFICIAL PARA SUBMISSÃO', `${metaRoute.title}: ${metaRoute.url}`, '', 'Atenciosamente,', sender, '', 'Este arquivo é um rascunho local. Caça BolsoBot não o enviou à Meta nem às organizações listadas. Uma pessoa autorizada deve conferir as fontes e enviá-lo pelo canal oficial.');
+    const draft = lines.join('\n');
+    $('#org-report-draft').value = draft;
+    $('#org-quality-score').innerHTML = `${score}<small>% completo</small>`;
+    $('#org-report-approved').checked = false;
+    $('#org-report-approved').disabled = false;
+    $('#download-org-report').disabled = true;
+    $('#copy-org-report').disabled = true;
+    $('#org-report-status').textContent = 'Revise todo o documento antes de habilitar a exportação.';
+  }
+
+  $('#build-org-report').addEventListener('click', buildOrgReport);
+  $('#org-report-recipients').addEventListener('input', clearOrgReport);
+  $('#org-report-approved').addEventListener('change', (event) => {
+    $('#download-org-report').disabled = !event.target.checked;
+    $('#copy-org-report').disabled = !event.target.checked;
+    $('#org-report-status').textContent = event.target.checked ? 'Revisado nesta sessão. A exportação continua sendo manual.' : 'A exportação requer revisão humana.';
+  });
+  $('#download-org-report').addEventListener('click', () => {
+    if ($('#org-report-approved').checked && $('#org-report-draft').value) {
+      const url = URL.createObjectURL(new Blob([$('#org-report-draft').value], { type: 'text/plain;charset=utf-8' }));
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `relatorio-institucional-${new Date().toISOString().slice(0, 10)}.txt`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      $('#org-report-status').textContent = 'Rascunho baixado no dispositivo. Nada foi compartilhado.';
+    }
+  });
+  $('#copy-org-report').addEventListener('click', async () => {
+    if (!$('#org-report-approved').checked || !$('#org-report-draft').value) return;
+    try {
+      await navigator.clipboard.writeText($('#org-report-draft').value);
+      $('#org-report-status').textContent = 'Rascunho copiado. Nada foi compartilhado.';
+    } catch {
+      $('#org-report-status').textContent = 'Não foi possível acessar a área de transferência; selecione e copie o texto manualmente.';
+      $('#org-report-draft').focus();
+      $('#org-report-draft').select();
+    }
+  });
+
+  function downloadOrgCase(item) {
+    if (!item.reviewed) return;
+    verifyOrgCase(item).then((valid) => {
+      if (!valid) { $('#org-report-status').textContent = 'Falha na conferência da impressão digital. Esta ficha não foi exportada.'; return; }
+    const lines = [
+      'FICHA DE EVIDÊNCIAS PÚBLICAS — REVISADA POR UMA PESSOA',
+      `Plataforma: ${orgPlatforms[item.platform]}`,
+      `Perfil: ${item.profile}`,
+      `Exemplo público: ${item.evidenceUrl}`,
+      `Fonte pública complementar: ${item.corroboratingUrl || 'Não informada'}`,
+      `Data observada: ${item.date}`,
+      `Fato informado: ${item.fact}`,
+      `Contexto alternativo: ${item.context || 'Não informado'}`,
+      '',
+      'Esta ficha reúne uma indicação e não determina que o perfil seja automatizado nem que viole regras. Confirme cada informação e escolha um motivo de denúncia que corresponda a uma violação específica. A decisão pertence à plataforma. Esta ferramenta não enviou denúncia.',
+      `Preparada localmente em: ${new Date().toLocaleString('pt-BR')}`,
+      `Impressão digital SHA-256: ${item.fingerprint}`,
+      'A impressão digital permite conferir consistência do conteúdo, mas pode ser recalculada nesta demonstração local. Não prova a veracidade das observações nem quem as registrou.',
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = `ficha-revisada-${item.platform}-${new Date().toISOString().slice(0, 10)}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+    }).catch(() => { $('#org-report-status').textContent = 'Não foi possível conferir a integridade. Tente novamente.'; });
+  }
+
+  orgCaseForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const error = $('#org-case-error');
+    error.textContent = '';
+    const profile = parseProfileUrl($('#org-profile-url').value);
+    if (profile.error) {
+      error.textContent = profile.error;
+      $('#org-profile-url').focus();
+      return;
+    }
+    if (!$('#org-public-confirm').checked) {
+      error.textContent = 'Confirme o acesso público e o motivo legítimo antes de registrar a indicação.';
+      $('#org-public-confirm').focus();
+      return;
+    }
+    if (!$('#org-observed-date').value || !$('#org-evidence-url').value.trim() || !$('#org-observation').value.trim()) {
+      error.textContent = 'Informe a data, um fato específico e o link de uma evidência pública.';
+      return;
+    }
+    const evidenceUrl = $('#org-evidence-url').value.trim();
+    let evidence;
+    try { evidence = new URL(evidenceUrl); } catch { error.textContent = 'Informe um link válido para a evidência pública.'; return; }
+    const expectedHosts = { facebook: ['facebook.com'], instagram: ['instagram.com'], threads: ['threads.com', 'threads.net'] }[profile.platform];
+    const evidenceHost = evidence.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '');
+    if (evidence.protocol !== 'https:' || !expectedHosts.some((host) => evidenceHost === host || evidenceHost.endsWith(`.${host}`))) {
+      error.textContent = 'O link da evidência precisa ser HTTPS e pertencer à mesma plataforma do perfil.';
+      $('#org-evidence-url').focus();
+      return;
+    }
+    const observedDate = $('#org-observed-date').value;
+    if (observedDate > new Date().toISOString().slice(0, 10)) {
+      error.textContent = 'A data de observação não pode estar no futuro.';
+      $('#org-observed-date').focus();
+      return;
+    }
+    const corroboratingUrl = $('#org-corroborating-url').value.trim();
+    let corroboration = null;
+    if (corroboratingUrl) {
+      try { corroboration = new URL(corroboratingUrl); } catch { error.textContent = 'O link complementar não parece válido.'; $('#org-corroborating-url').focus(); return; }
+      const corroborationHost = corroboration.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '');
+      if (corroboration.protocol !== 'https:' || !expectedHosts.some((host) => corroborationHost === host || corroborationHost.endsWith(`.${host}`))) {
+        error.textContent = 'A fonte complementar precisa ser HTTPS e pertencer à mesma plataforma.';
+        $('#org-corroborating-url').focus();
+        return;
+      }
+    }
+    state.orgCases.unshift({
+      id: crypto.randomUUID(), profile: profile.profile, platform: profile.platform,
+      date: observedDate, evidenceUrl: evidence.href, fact: $('#org-observation').value.trim(),
+      corroboratingUrl: corroboration?.href || '', context: $('#org-context').value.trim(), reviewed: false, included: false,
+    });
+    orgCaseForm.reset();
+    renderOrgCases();
+    clearOrgReport();
+    $('#org-case-list').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  profileForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const error = $('#url-error');
+    error.textContent = '';
+    const parsed = parseProfileUrl($('#profile-url').value);
+    if (parsed.error) {
+      showError(error, parsed.error);
+      $('#profile-url').focus();
+      return;
+    }
+    if (!$('#public-confirm').checked) {
+      showError(error, 'Confirme que consegue ver este perfil por meio do acesso público comum. Se for privado ou restrito, esta ferramenta não poderá analisá-lo.');
+      $('#public-confirm').focus();
+      return;
+    }
+
+    if (state.profile && state.profile !== parsed.profile) {
+      observationsForm.reset();
+      observationsList.replaceChildren();
+    }
+    $('#observations-error').textContent = '';
+    assessmentPanel.hidden = true;
+    $('#top-review-score-card').hidden = true;
+    state.profile = parsed.profile;
+    state.platform = parsed.platform;
+    $('#platform-chip').textContent = parsed.platform;
+    const profileLink = $('#profile-link');
+    profileLink.href = parsed.profile;
+    profileLink.textContent = parsed.profile;
+    profilePanel.hidden = false;
+    profileLink.setAttribute('aria-label', `Abrir o perfil público do ${parsed.platform} em uma nova aba`);
+    resetReportFollowup();
+    $('#official-links').replaceChildren();
+    const info = reporting[parsed.platform];
+    const platformNames = { facebook: 'Facebook', instagram: 'Instagram', threads: 'Threads' };
+    const profileAction = document.createElement('a');
+    profileAction.href = parsed.profile;
+    profileAction.target = '_blank';
+    profileAction.rel = 'noopener noreferrer';
+    profileAction.setAttribute('aria-label', `Abrir o perfil público no ${platformNames[parsed.platform]} em uma nova aba`);
+    profileAction.innerHTML = `<span data-icon="external" aria-hidden="true"></span>Abrir perfil público no ${platformNames[parsed.platform]} ↗`;
+    profileAction.addEventListener('click', revealReportFollowup);
+    const link = document.createElement('a');
+    link.href = info.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.innerHTML = `${info.title} <span aria-hidden="true">↗</span>`;
+    link.addEventListener('click', revealReportFollowup);
+    $('#official-links').append(profileAction, link);
+    profileForm.classList.add('is-complete');
+    profilePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.dispatchEvent(new CustomEvent('signalcheck:profile', { detail: parsed }));
+  });
+
+  $('#change-profile').addEventListener('click', () => {
+    resetReportFollowup();
+    state.profile = null;
+    assessmentPanel.hidden = true;
+    $('#top-review-score-card').hidden = true;
+    observationsForm.reset();
+    observationsList.replaceChildren();
+    $('#observations-error').textContent = '';
+    window.dispatchEvent(new Event('signalcheck:clear'));
+    profilePanel.hidden = true;
+    $('#profile-url').value = '';
+    $('#public-confirm').checked = false;
+    $('#url-error').textContent = '';
+    $('#profile-url').focus();
+  });
+
+  function addObservation() {
+    const fragment = observationTemplate.content.cloneNode(true);
+    const card = $('.observation-card', fragment);
+    const date = $('.obs-date', card);
+    date.max = new Date().toISOString().slice(0, 10);
+    $('.remove-observation', card).addEventListener('click', () => { card.remove(); updateObservationNumbers(); });
+    observationsList.append(card);
+    date.focus();
+    updateObservationNumbers();
+  }
+
+  function updateObservationNumbers() {
+    $$('.observation-card', observationsList).forEach((card, index) => {
+      $('.observation-number', card).textContent = `OBSERVAÇÃO ${String(index + 1).padStart(2, '0')}`;
+    });
+  }
+
+  $('#add-observation').addEventListener('click', addObservation);
+
+  $('#edit-observations').addEventListener('click', () => {
+    assessmentPanel.hidden = true;
+    $('#top-review-score-card').hidden = true;
+    profilePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function getEntries() {
+    return $$('.observation-card', observationsList).map((card) => ({
+      date: $('.obs-date', card).value,
+      category: $('.obs-category', card).value,
+      fact: $('.obs-fact', card).value.trim(),
+      context: $('.obs-context', card).value.trim(),
+      reference: $('.obs-reference', card).value.trim(),
+    }));
+  }
+
+  $('#reuse-in-collective-report').addEventListener('click', () => {
+    const status = $('#collective-transfer-status');
+    const hosts = { facebook: ['facebook.com'], instagram: ['instagram.com'], threads: ['threads.com', 'threads.net'] }[state.platform] || [];
+    const eligible = getEntries().find((entry) => {
+      try {
+        const url = new URL(entry.reference), host = url.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '');
+        return Boolean(entry.date && entry.fact && url.protocol === 'https:' && hosts.some((item) => host === item || host.endsWith(`.${item}`)));
+      } catch { return false; }
+    });
+    if (!state.profile || !eligible) {
+      status.textContent = 'Adicione a uma observação a data, um fato e o link HTTPS da publicação pública correspondente.';
+      $('.obs-reference', $$('.observation-card', observationsList)[0] || observationsList)?.focus();
+      return;
+    }
+    if (['#org-profile-url','#org-observed-date','#org-evidence-url','#org-corroborating-url','#org-observation','#org-context'].some((selector) => $(selector).value.trim()) && !window.confirm('Substituir os campos que já estão preenchidos por esta observação?')) return;
+    $('#org-profile-url').value = state.profile;
+    $('#org-observed-date').value = eligible.date;
+    $('#org-evidence-url').value = eligible.reference;
+    $('#org-observation').value = eligible.fact;
+    $('#org-context').value = eligible.context;
+    status.textContent = 'Dados copiados para a fila local. Confirme o acesso público e revise o conteúdo antes de adicionar.';
+    orgCaseForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('#org-observation').focus({ preventScroll: true });
+  });
+
+  function labelCategory(category) {
+    return {
+      cadence: 'Frequência de publicação',
+      repetition: 'Conteúdo repetido',
+      engagement: 'Padrão de engajamento',
+      inconsistency: 'Inconsistência de comportamento',
+      profile: 'Detalhe público do perfil',
+      other: 'Outro contexto',
+    }[category] || 'Observação';
+  }
+
+  function summarize(entries) {
+    const facts = entries.map((entry) => entry.fact.toLowerCase()).join(' ');
+    const isDate = (value) => value ? new Date(`${value}T12:00:00Z`) : null;
+    const dates = entries.map((entry) => isDate(entry.date)).filter(Boolean);
+    let datedSpan = 0;
+    if (dates.length >= 2) {
+      datedSpan = Math.max(1, Math.round((Math.max(...dates.map((d) => d.getTime())) - Math.min(...dates.map((d) => d.getTime()))) / 86400000) + 1);
+    }
+
+    const posts = Number($('#posts-observed').value);
+    const days = Number($('#days-observed').value);
+    const repeated = Number($('#repeated-posts').value);
+    const validPosts = Number.isFinite(posts) && posts > 0;
+    const validDays = Number.isFinite(days) && days > 0;
+    const validRepeated = Number.isFinite(repeated) && repeated >= 0 && (!validPosts || repeated <= posts);
+
+    const engagement = $('input[name="engagement"]:checked').value;
+    const inconsistency = $('input[name="inconsistency"]:checked').value;
+    const bioStatus = $('#bio-status').value;
+    const signals = [];
+    const evidenceByCategory = (key) => entries.filter((e) => e.category === key && e.fact);
+
+    if (bioStatus !== 'unknown') {
+      const supporting = bioStatus === 'absent' ? evidenceByCategory('profile') : [];
+      signals.push({
+        id: 'profile', title: 'Informações públicas do perfil',
+        value: bioStatus === 'absent' ? (supporting.length ? 0.45 : 0.12) : 0,
+        weight: 5, assessed: true,
+        finding: bioStatus === 'absent'
+          ? 'Você registrou que uma biografia ou apresentação não estava visível. Este é um indício fraco e pode decorrer de uma escolha comum de privacidade ou estilo.'
+          : 'Você registrou uma biografia ou apresentação visível; isso não confirma identidade nem autenticidade.',
+        supporting,
+        context: 'O nível de preenchimento do perfil é um contexto fraco, não uma evidência de que a conta seja automatizada.',
+      });
+    }
+
+    if (validPosts && validDays) {
+      const perDay = posts / days;
+      const rateValue = Math.min(perDay / 30, 1);
+      signals.push({
+        id: 'cadence', title: 'Frequência de publicação', value: rateValue, weight: 15, assessed: true,
+        finding: `${posts} publicações ao longo de ${days} dia${days === 1 ? '' : 's'} (${perDay.toFixed(1)} por dia, em média). Um volume alto, por si só, não prova automação.`,
+        supporting: evidenceByCategory('cadence'),
+        context: 'Publicações programadas, eventos ao vivo, notícias ou contas de organizações podem publicar com frequência.',
+      });
+    }
+
+    if (validPosts && validRepeated) {
+      const repetitionValue = posts ? Math.min(repeated / posts, 1) : 0;
+      signals.push({
+        id: 'repetition', title: 'Publicações semelhantes ou repetidas', value: repetitionValue, weight: 20, assessed: true,
+        finding: `${repeated} de ${posts} publicações da sua amostra foram identificadas por você como semelhantes.`,
+        supporting: evidenceByCategory('repetition'),
+        context: 'Modelos, comunicados, publicações cruzadas e campanhas programadas podem gerar repetição.',
+      });
+    }
+
+    if (engagement !== 'unknown') {
+      const supporting = evidenceByCategory('engagement');
+      signals.push({
+        id: 'engagement', title: 'Padrão repetido de engajamento', value: engagement === 'yes' ? (supporting.length ? 0.45 : 0.12) : 0,
+        weight: 10, assessed: true,
+        finding: engagement === 'yes'
+          ? 'Você indicou um padrão recorrente de engajamento público. Esse padrão não foi verificado de forma independente.'
+          : 'Você não registrou um padrão incomum e recorrente de engajamento no material analisado.',
+        supporting,
+        context: 'Os números de engajamento variam naturalmente e podem ser afetados pelas recomendações da plataforma ou pelo tamanho do público.',
+      });
+    }
+
+    if (inconsistency !== 'unknown') {
+      const supporting = evidenceByCategory('inconsistency');
+      signals.push({
+        id: 'inconsistency', title: 'Consistência de comportamento', value: inconsistency === 'yes' ? (supporting.length ? 0.45 : 0.12) : 0,
+        weight: 10, assessed: true,
+        finding: inconsistency === 'yes'
+          ? 'Você indicou uma divergência recorrente entre as informações públicas do perfil e o comportamento público. O significado é incerto.'
+          : 'Você não registrou uma divergência recorrente no material analisado.',
+        supporting,
+        context: 'Pessoas e organizações podem mudar de assunto, função ou estilo de comunicação por motivos comuns.',
+      });
+    }
+
+    const assessedWeight = signals.reduce((sum, item) => sum + item.weight, 0);
+    const raw = signals.reduce((sum, item) => sum + item.weight * item.value, 0);
+    const score = assessedWeight ? Math.round((raw / assessedWeight) * 100) : null;
+    const totalNotes = entries.filter((e) => e.fact).length;
+    const citedNotes = entries.filter((e) => e.fact && e.date).length;
+    const dateShare = totalNotes ? citedNotes / totalNotes : 0;
+    const sampleFactor = validPosts ? Math.min(posts / 30, 1) : 0;
+    const durationFactor = validDays ? Math.min(days / 14, 1) : 0;
+    const notesFactor = Math.min(totalNotes / 5, 1);
+    const confidence = Math.round(100 * (0.45 * sampleFactor + 0.25 * durationFactor + 0.2 * notesFactor + 0.1 * dateShare));
+    const supportingCount = signals.reduce((sum, item) => sum + item.supporting.length, 0);
+    const contradictoryCount = entries.filter((e) => e.context).length;
+    const missing = [];
+    if (!validPosts || !validDays) missing.push('É necessário informar a quantidade de publicações e o período de observação para descrever a frequência.');
+    if (!validRepeated) missing.push('A quantidade válida de publicações semelhantes não foi informada ou excede o tamanho da amostra.');
+    if (bioStatus === 'unknown') missing.push('O nível de preenchimento do perfil público não foi registrado.');
+    if (engagement === 'unknown') missing.push('Os padrões de engajamento não foram avaliados.');
+    if (inconsistency === 'unknown') missing.push('A consistência de comportamento não foi avaliada.');
+    if (totalNotes === 0) missing.push('Nenhum exemplo concreto e datado foi adicionado.');
+    else if (citedNotes < totalNotes) missing.push(`${totalNotes - citedNotes} anotação(ões) sem data de observação.`);
+    if (!contradictoryCount) missing.push('Nenhuma explicação alternativa ou contexto em sentido contrário foi registrado até agora.');
+
+    let band = 'Informações insuficientes';
+    let explainer = 'Registre ao menos um exemplo concreto e datado e avalie mais de um indício para gerar um resumo da análise.';
+    if (score !== null && signals.filter((item) => item.assessed).length >= 2 && totalNotes > 0) {
+      if (score < 25) {
+        band = 'Poucos indícios registrados';
+        explainer = 'Seus registros contêm poucos dos indícios selecionados. Isso não comprova que uma conta seja autêntica.';
+      } else if (score < 55) {
+        band = 'Alguns indícios registrados';
+        explainer = 'Alguns dos padrões selecionados aparecem em suas anotações. Avalie a relevância deles e possíveis explicações legítimas.';
+      } else {
+        band = 'Vários indícios registrados';
+        explainer = 'Vários dos padrões selecionados aparecem em suas anotações. Isso indica prioridade de análise — não um veredito de que se trata de um bot nem uma constatação de violação de política.';
+      }
+    } else {
+      band = 'Informações insuficientes';
+      explainer = 'As anotações disponíveis são insuficientes para um resumo. A ausência de um indício não é evidência de comportamento suspeito.';
+    }
+
+    return { signals, score, band, explainer, confidence, missing, totalNotes, supportingCount, contradictoryCount, posts: validPosts ? posts : null, days: validDays ? days : null, repeated: validRepeated ? repeated : null, datedSpan };
+  }
+
+  function appendText(parent, tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    node.textContent = text;
+    parent.append(node);
+    return node;
+  }
+
+  function renderFindings(summary) {
+    const list = $('#findings-list');
+    list.replaceChildren();
+    const active = summary.signals.filter((signal) => signal.value > 0);
+    const visible = summary.signals;
+    $('#finding-count').textContent = `${visible.length} indício(s) analisado(s)`;
+    if (!visible.length) {
+      appendText(list, 'p', 'findings-empty', 'Ainda não é possível resumir indícios. Adicione observações e selecione as áreas que você analisou.');
+      return;
+    }
+
+    visible.forEach((signal) => {
+      const item = document.createElement('article');
+      item.className = 'finding';
+      appendText(item, 'span', 'finding-symbol', signal.value > 0 ? '!' : '·');
+      const body = document.createElement('div');
+      appendText(body, 'h4', '', signal.title);
+      appendText(body, 'p', 'finding-interpretation', signal.finding);
+      if (signal.supporting.length) {
+        signal.supporting.forEach((entry) => {
+          const cite = entry.date ? `${entry.date}: ` : '';
+          appendText(body, 'p', 'finding-context', `Sua anotação — ${cite}${entry.fact}${entry.reference ? ` (referência: ${entry.reference})` : ''}`);
+          if (entry.context) appendText(body, 'p', 'finding-context', `Contexto registrado por você — ${entry.context}`);
+        });
+      } else if (signal.value > 0) {
+        appendText(body, 'p', 'finding-context', 'Nenhum exemplo datado foi associado a este indício. Considere-o especialmente incerto.');
+      }
+      appendText(body, 'p', 'finding-context', `Cuidado — ${signal.context}`);
+      item.append(body);
+      appendText(item, 'span', 'finding-point', signal.value > 0 ? `${Math.round(signal.value * 100)} / 100` : 'Nenhum indício');
+      list.append(item);
+    });
+    if (active.length === 0) $('#finding-count').textContent = `${visible.length} indício(s) analisado(s) · nenhum indício registrado`;
+  }
+
+  function buildDraft(summary, entries) {
+    const platformName = state.platform.charAt(0).toUpperCase() + state.platform.slice(1);
+    const info = reporting[state.platform];
+    const lines = [
+      'ANÁLISE DE PERFIL PÚBLICO — RASCUNHO PREPARADO PELA PESSOA USUÁRIA',
+      `Plataforma: ${platformName}`,
+      `URL do perfil: ${state.profile}`,
+      `Preparado em: ${new Date().toLocaleDateString('pt-BR')}`,
+      '',
+      'LIMITAÇÃO IMPORTANTE',
+      'Este é um resumo preenchido pela pessoa usuária, não uma verificação independente. A pontuação da análise é uma heurística de triagem, não uma probabilidade, afirmação de identidade ou constatação de violação de regras. Atividades incomuns podem ter explicações legítimas.',
+      '',
+      `Resumo da análise: ${summary.band}`,
+      `Pontuação de prioridade da análise: ${summary.score === null ? 'Indisponível' : `${summary.score}/100`}`,
+      `Grau de confiança nos registros: ${summary.confidence < 40 ? 'Baixo' : summary.confidence < 75 ? 'Moderado' : 'Mais completo (não verificado)'}`,
+      '',
+      'OBSERVAÇÕES REGISTRADAS PELA PESSOA ANALISTA',
+    ];
+    if (entries.filter((entry) => entry.fact).length) {
+      entries.filter((entry) => entry.fact).forEach((entry, index) => {
+        lines.push(`${index + 1}. [${entry.date || 'data não informada'}] ${labelCategory(entry.category)}: ${entry.fact}`);
+        if (entry.context) lines.push(`   Contexto ou evidência em sentido contrário registrado: ${entry.context}`);
+        if (entry.reference) lines.push(`   Referência pública fornecida: ${entry.reference}`);
+      });
+    } else {
+      lines.push('Nenhum exemplo datado registrado.');
+    }
+    lines.push('', 'LIMITAÇÕES E INFORMAÇÕES AUSENTES');
+    if (summary.missing.length) summary.missing.forEach((item) => lines.push(`- ${item}`));
+    else lines.push('- Este formulário não identificou outros campos ausentes; os registros continuam sendo informados pela pessoa usuária e não foram verificados.');
+    lines.push('- Esta ferramenta não verificou a visibilidade do perfil nem qualquer observação.');
+    lines.push('- Um perfil com poucos detalhes, grande volume de publicações, repetição ou padrões de engajamento não comprovam, por si só, automação ou intenção maliciosa.');
+    lines.push('', 'Se eu fizer uma denúncia, farei isso por conta própria na plataforma e selecionarei um motivo que descreva com precisão uma preocupação específica relacionada às políticas.');
+    lines.push('', `Instruções oficiais: ${info.title} — ${info.url}`);
+    lines.push('', 'Esta ferramenta não enviou nenhuma denúncia.');
+    return lines.join('\n');
+  }
+
+  function renderSummary(summary, entries) {
+    $('#score-value').innerHTML = `${summary.score === null ? '—' : String(summary.score)}<small>${summary.score === null ? '' : '/ 100'}</small>`;
+    $('#top-review-score').textContent = summary.score === null ? '—' : `${summary.score}/100`;
+    $('#top-review-band').textContent = summary.band;
+    $('#top-review-score-card').hidden = false;
+    $('#score-band').textContent = summary.band;
+    $('#score-explainer').textContent = summary.explainer;
+    const confidenceLabel = summary.confidence < 40 ? 'Baixo' : summary.confidence < 75 ? 'Moderado' : 'Mais completo';
+    $('#confidence-value').textContent = confidenceLabel;
+    const confidenceFill = $('#confidence-meter-fill');
+    confidenceFill.classList.remove('confidence-low', 'confidence-medium', 'confidence-high');
+    confidenceFill.classList.add(summary.confidence < 40 ? 'confidence-low' : summary.confidence < 75 ? 'confidence-medium' : 'confidence-high');
+    $('#confidence-caption').textContent = 'Baseado no tamanho da amostra, período de observação, quantidade de anotações e datas — não na autenticidade da conta.';
+    renderFindings(summary);
+    const missing = $('#missing-callout');
+    missing.replaceChildren();
+    const heading = document.createElement('strong');
+    heading.textContent = 'O que está ausente ou incerto: ';
+    missing.append(heading, document.createTextNode(summary.missing.length ? summary.missing.join(' ') : 'Todas as áreas opcionais do formulário foram consideradas, mas as informações ainda são fornecidas pela pessoa usuária e não foram verificadas.'));
+    $('#report-draft').value = buildDraft(summary, entries);
+    $('#review-approved').checked = false;
+    $('#download-report').disabled = true;
+    $('#copy-report').disabled = true;
+    $('#copy-status').textContent = 'Aprove o rascunho para habilitar estas ações.';
+    $('#approval-error').textContent = '';
+    resetReportFollowup();
+  }
+
+  observationsForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const error = $('#observations-error');
+    error.textContent = '';
+    const entries = getEntries();
+    const withFact = entries.filter((entry) => entry.fact);
+    if (entries.some((entry) => !entry.fact || !entry.date)) {
+      showError(error, 'Cada anotação datada precisa conter uma data e uma observação específica. Complete-a ou remova a anotação vazia.');
+      const first = $$('.observation-card', observationsList).find((card) => !$('.obs-date', card).value || !$('.obs-fact', card).value.trim());
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    const posts = Number($('#posts-observed').value);
+    const repeated = Number($('#repeated-posts').value);
+    if ($('#posts-observed').value && (!Number.isInteger(posts) || posts < 0)) {
+      showError(error, 'Informe um número inteiro válido de publicações na amostra.');
+      $('#posts-observed').focus();
+      return;
+    }
+    if ($('#days-observed').value && (!Number.isInteger(Number($('#days-observed').value)) || Number($('#days-observed').value) < 1)) {
+      showError(error, 'Informe pelo menos um dia de observação ou deixe o campo em branco.');
+      $('#days-observed').focus();
+      return;
+    }
+    if ($('#repeated-posts').value && (!Number.isInteger(repeated) || repeated < 0 || (Number.isInteger(posts) && repeated > posts))) {
+      showError(error, 'A quantidade de publicações semelhantes deve ser um número inteiro que não ultrapasse o tamanho da amostra.');
+      $('#repeated-posts').focus();
+      return;
+    }
+    if ($('input[name="engagement"]:checked').value === 'yes' && !withFact.some((e) => e.category === 'engagement')) {
+      showError(error, 'Adicione uma observação datada sobre engajamento antes de incluir esse indício.');
+      return;
+    }
+    if ($('input[name="inconsistency"]:checked').value === 'yes' && !withFact.some((e) => e.category === 'inconsistency')) {
+      showError(error, 'Adicione uma observação datada sobre inconsistência de comportamento antes de incluir esse indício.');
+      return;
+    }
+    if ($('#bio-status').value === 'absent' && !withFact.some((e) => e.category === 'profile')) {
+      showError(error, 'Adicione um detalhe datado do perfil público antes de incluir o indício de informação ausente.');
+      return;
+    }
+    if (withFact.length === 0) {
+      showError(error, 'Adicione pelo menos uma observação concreta e datada. Não criaremos uma análise sem um exemplo.');
+      $('#add-observation').focus();
+      return;
+    }
+
+    const summary = summarize(entries);
+    renderSummary(summary, entries);
+    assessmentPanel.hidden = false;
+    assessmentPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  $('#review-approved').addEventListener('change', (event) => {
+    const enabled = event.target.checked;
+    $('#download-report').disabled = !enabled;
+    $('#copy-report').disabled = !enabled;
+    $('#approval-error').textContent = '';
+    $('#copy-status').textContent = enabled
+      ? 'Seu rascunho revisado está pronto para ser copiado ou baixado. Nada foi enviado.'
+      : 'Aprove o rascunho para habilitar estas ações.';
+  });
+
+  $('#download-report').addEventListener('click', () => {
+    if (!$('#review-approved').checked) return;
+    const content = $('#report-draft').value;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = 'signal-check-review.txt';
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+    $('#copy-status').textContent = 'Baixado no seu dispositivo. Nada foi enviado à Meta.';
+  });
+
+  $('#copy-report').addEventListener('click', async () => {
+    if (!$('#review-approved').checked) return;
+    try {
+      await navigator.clipboard.writeText($('#report-draft').value);
+      $('#copy-status').textContent = 'Copiado para a área de transferência. Nada foi enviado à Meta.';
+    } catch {
+      $('#copy-status').textContent = 'Não foi possível acessar a área de transferência. Selecione e copie o texto manualmente.';
+      $('#report-draft').focus();
+      $('#report-draft').select();
+    }
+  });
+
+  $('#manual-report-submitted').addEventListener('click', () => {
+    if (state.reportFollowupStarted) recordReportStatus(true);
+  });
+  $('#manual-report-not-submitted').addEventListener('click', () => {
+    if (state.reportFollowupStarted) recordReportStatus(false);
+  });
+  $('#manual-report-status-reset').addEventListener('click', () => {
+    state.reportStatus = null;
+    $('#manual-report-status').hidden = true;
+    $('#manual-report-status').removeAttribute('data-status');
+    $('#manual-report-status-actions').hidden = false;
+  });
+})();
+
+
+// Printing is a local browser action and remains gated by explicit human review.
+(() => {
+  const actions = document.querySelector('.report-actions');
+  const approval = document.querySelector('#review-approved');
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.id = 'print-review';
+  button.className = 'button button-outline';
+  button.textContent = 'Imprimir análise';
+  button.disabled = !approval.checked;
+  document.querySelector('#copy-report').insertAdjacentElement('afterend', button);
+  approval.addEventListener('change', () => {
+    button.disabled = !approval.checked;
+  });
+  document.querySelector('#observations-form').addEventListener('submit', () => {
+    button.disabled = !approval.checked;
+  });
+  button.addEventListener('click', () => {
+    if (approval.checked) window.print();
+  });
+})();
+
+</script>
+<script>window.SIGNALCHECK_DEMO_DATA = {"caseId": "DEMO-FICTICIO-001", "fingerprint": "f076e46403c7a0491df2f3dddbcf1267ed35862a24de5bb7817da57a3655e916", "analysisVersion": "synthetic-demo-1.0", "profile": {"username": "exemplo_ficticio_demo", "url": "DEMONSTRAÇÃO: nenhum perfil real", "biography": "Perfil inexistente usado exclusivamente em uma demonstração.", "followerCount": 500}, "source": {"provider": "DEMONSTRAÇÃO — DADOS SINTÉTICOS", "fetchedAt": "2026-10-24T00:00:00.000Z", "windowStart": "2026-10-10T00:00:00.000Z", "windowEnd": "2026-10-24T00:00:00.000Z", "windowDays": 14, "pages": 0, "truncated": false, "maxPosts": 100}, "sample": {"returnedPosts": 70, "eligiblePosts": 70, "spanDays": 11.5, "excludedPosts": 0, "clippedTextPosts": 0, "relevantTextPosts": 70, "truncated": false}, "features": [{"key": "rate", "title": "Volume de publicações na janela", "value": 0.1667, "weight": 10, "observation": "70 publicações elegíveis na janela de 14 dias. A amostra pode ser incompleta.", "caution": "Organizações, eventos e agendamento legítimo podem gerar grande volume.", "evidence": [{"postId": "synthetic-0", "timestamp": "2026-10-10T00:00:00.000Z", "permalink": null, "excerpt": "EXEMPLO FICTÍCIO 0: notícia ilustrativa para demonstrar como a ferramenta avalia uma amostra, sem uma pessoa ou conta real."}, {"postId": "synthetic-1", "timestamp": "2026-10-10T04:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}]}, {"key": "regularity", "title": "Regularidade dos intervalos", "value": 1, "weight": 10, "observation": "Variação relativa dos intervalos: 0.00; 69 intervalos positivos.", "caution": "Publicação programada é comum e não implica abuso.", "evidence": [{"postId": "synthetic-0", "timestamp": "2026-10-10T00:00:00.000Z", "permalink": null, "excerpt": "EXEMPLO FICTÍCIO 0: notícia ilustrativa para demonstrar como a ferramenta avalia uma amostra, sem uma pessoa ou conta real."}, {"postId": "synthetic-1", "timestamp": "2026-10-10T04:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-2", "timestamp": "2026-10-10T08:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}]}, {"key": "self_repetition", "title": "Texto repetido ou muito semelhante", "value": 0.7857, "weight": 15, "observation": "55 de 70 textos elegíveis têm alta semelhança por grupos de três palavras. Citações, repostagens e textos curtos são excluídos.", "caution": "Campanhas, modelos e anúncios podem repetir texto legitimamente.", "evidence": [{"postId": "synthetic-2", "timestamp": "2026-10-10T08:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-3", "timestamp": "2026-10-10T12:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-4", "timestamp": "2026-10-10T16:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-6", "timestamp": "2026-10-11T00:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-7", "timestamp": "2026-10-11T04:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}]}, {"key": "template_links", "title": "Link e legenda repetidos", "value": 1, "weight": 10, "observation": "56 de 56 textos com link repetem a combinação de destino e legenda pelo menos três vezes.", "caution": "Usar o mesmo domínio não é, por si só, um indício; comunicados podem ser repetidos.", "evidence": [{"postId": "synthetic-1", "timestamp": "2026-10-10T04:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-2", "timestamp": "2026-10-10T08:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-3", "timestamp": "2026-10-10T12:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-4", "timestamp": "2026-10-10T16:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}, {"postId": "synthetic-6", "timestamp": "2026-10-11T00:00:00.000Z", "permalink": null, "excerpt": "DADOS SINTÉTICOS: esta mensagem de demonstração repete um convite ilustrativo para um evento fictício. A repetição pode ser agendamento legítimo. https://example.invalid/evento"}]}, {"key": "round_the_clock", "title": "Distribuição de horários em UTC", "value": 0.25, "weight": 10, "observation": "6 horários UTC distintos em 12 dias com publicações. Não é uma inferência sobre localização ou sono.", "caution": "Equipes e ferramentas de agendamento podem publicar em vários horários.", "evidence": []}, {"key": "baseline_shift", "title": "Mudança em relação ao histórico", "value": null, "weight": 10, "observation": "Não há uma linha de base histórica independente nesta consulta.", "caution": "Dados ausentes não aumentam a pontuação.", "evidence": []}, {"key": "public_coordination", "title": "Coordenação entre contas", "value": null, "weight": 15, "observation": "Esta consulta trata de uma única conta; coordenação não foi avaliada.", "caution": "Opiniões semelhantes não comprovam coordenação.", "evidence": []}, {"key": "profile_content_mismatch", "title": "Identidade e conteúdo", "value": null, "weight": 5, "observation": "Biografia e seguidores são contexto; não são usados para inferir identidade ou automação.", "caution": "Não inferimos identidade, intenção, idioma, origem ou opiniões.", "evidence": []}], "score": 42, "abstained": false, "band": "Revisar indícios e contexto", "confidence": "Amostra mais completa", "confidenceValue": 1, "limitations": ["DEMONSTRAÇÃO FICTÍCIA: textos, datas e métricas são sintéticos; nenhum perfil real foi analisado.", "Esta pontuação é uma heurística não calibrada, não a probabilidade de uma conta ser bot nem uma constatação de violação.", "Nenhuma denúncia foi enviada; a pessoa revisora deve avaliar fatos e explicações alternativas.", "Biografia, seguidores e verificação não comprovam que uma conta é humana ou automatizada.", "Mudança histórica, coordenação entre contas e identidade não foram avaliadas.", "Horários são analisados em UTC. Textos traduzidos ou editados podem escapar da comparação simples."], "automatedEnforcement": false, "reportSubmitted": false, "demo": true};</script>
+<script>
+(() => {
+  'use strict';
+  const q = (selector, root = document) => root.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const panel = document.createElement('section');
+  panel.id = 'threads-panel';
+  panel.className = 'report-section threads-panel';
+  panel.hidden = true;
+  // Static synthetic demonstration; fixture content is rendered with textContent only.
+  panel.innerHTML = `
+    <p class="eyebrow">DEMONSTRAÇÃO INTERATIVA</p>
+    <h2>Explore um exemplo fictício</h2>
+    <p>Veja como organizar sinais, exemplos e contexto. A demonstração usa somente dados sintéticos e não consulta contas reais.</p>
+    <p class="form-error api-status" id="threads-status" role="status" aria-live="polite"></p>
+    <div id="threads-result" hidden>
+      <p id="threads-demo-badge" class="review-guard api-policy" hidden>DEMONSTRAÇÃO FICTÍCIA · textos, datas e métricas sintéticos. Nenhum perfil real ou denúncia.</p>
+      <div class="result-tabs" role="tablist" aria-label="Resultados da análise">
+        <button type="button" class="result-tab" id="threads-tab-overview" role="tab" aria-selected="true" aria-controls="threads-pane-overview" tabindex="0"><span data-icon="grid" aria-hidden="true"></span>Visão geral</button>
+        <button type="button" class="result-tab" id="threads-tab-evidence" role="tab" aria-selected="false" aria-controls="threads-pane-evidence" tabindex="-1"><span data-icon="link" aria-hidden="true"></span>Evidências</button>
+        <button type="button" class="result-tab" id="threads-tab-draft" role="tab" aria-selected="false" aria-controls="threads-pane-draft" tabindex="-1"><span data-icon="file" aria-hidden="true"></span>Rascunho</button>
+      </div>
+      <section class="result-pane api-overview" id="threads-pane-overview" role="tabpanel" aria-labelledby="threads-tab-overview" tabindex="0">
+        <div class="api-score-card">
+          <div>
+            <p class="api-panel-heading"><span data-icon="chart" aria-hidden="true"></span>Prioridade de revisão</p>
+            <p id="threads-score-number" class="api-score-number" aria-live="polite"></p>
+            <p id="threads-score-label" class="api-policy">Heurística de prioridade de revisão; não é probabilidade.</p>
+            <meter id="threads-score-meter" min="0" max="100" aria-label="Prioridade de revisão, não é probabilidade" hidden></meter>
+          </div>
+          <div>
+            <h3 id="threads-band"></h3>
+            <p id="threads-summary" class="api-summary-note"></p>
+          </div>
+        </div>
+        <dl id="threads-stat-grid" class="api-stat-grid" aria-label="Dados da amostra"></dl>
+        <section class="api-summary-note" aria-labelledby="threads-provenance-heading">
+          <h4 id="threads-provenance-heading" class="api-panel-heading"><span data-icon="link" aria-hidden="true"></span>Origem e proveniência</h4>
+          <p id="threads-provenance" class="api-policy"></p>
+        </section>
+        <section class="api-summary-note" aria-labelledby="threads-limitations-heading">
+          <h4 id="threads-limitations-heading" class="api-panel-heading"><span data-icon="info" aria-hidden="true"></span>Incertezas e limitações</h4>
+          <p id="threads-limitations" class="missing-callout"></p>
+        </section>
+        <section aria-labelledby="threads-findings-heading">
+          <h4 id="threads-findings-heading" class="api-panel-heading"><span data-icon="nodes" aria-hidden="true"></span>Indicadores avaliados</h4>
+          <div id="threads-findings" class="findings-list signal-cards"></div>
+        </section>
+      </section>
+      <section class="result-pane" id="threads-pane-evidence" role="tabpanel" aria-labelledby="threads-tab-evidence" tabindex="0" hidden>
+        <h3 class="api-panel-heading"><span data-icon="link" aria-hidden="true"></span>Exemplos citados na amostra</h3>
+        <p class="api-policy">Cada exemplo aparece uma única vez. Confira o contexto e considere explicações legítimas antes de usar o rascunho.</p>
+        <div id="threads-evidence-list" aria-live="polite"></div>
+        <p id="threads-evidence-empty" class="result-empty">Não há exemplos citados nesta amostra.</p>
+      </section>
+      <section class="result-pane" id="threads-pane-draft" role="tabpanel" aria-labelledby="threads-tab-draft" tabindex="0" hidden>
+        <h3 class="api-panel-heading"><span data-icon="file" aria-hidden="true"></span>Rascunho para revisão humana</h3>
+        <label class="field-label" for="threads-draft">Rascunho factual editável — nenhuma denúncia enviada</label><textarea id="threads-draft" rows="12"></textarea>
+        <label class="check-line approval-line"><input type="checkbox" id="threads-reviewed"><span>Conferi os exemplos, considerei explicações legítimas e revisei este texto. A pontuação não é motivo suficiente para denunciar.</span></label>
+        <div class="report-actions"><button type="button" class="button button-primary" id="threads-download" disabled><span data-icon="download" aria-hidden="true"></span>Baixar rascunho revisado</button><button type="button" class="button button-outline" id="threads-copy" disabled><span data-icon="copy" aria-hidden="true"></span>Copiar rascunho</button></div>
+        <div class="report-actions" id="threads-report-links" hidden><a id="threads-open-profile" href="#" target="_blank" rel="noopener noreferrer"><span data-icon="external" aria-hidden="true"></span>Abrir perfil público no Threads ↗</a><a id="threads-report-guide" href="https://help.instagram.com/6602413966453273/" target="_blank" rel="noopener noreferrer"><span data-icon="external" aria-hidden="true"></span>Como denunciar manualmente no Threads ↗</a></div>
+        <div class="report-followup" id="threads-report-followup" hidden><div class="report-followup-intro"><span class="report-followup-icon" data-icon="check-circle"></span><div><strong>Depois de voltar da plataforma</strong><p>Registre se você enviou a denúncia ou decidiu não enviá-la. Isso só salva sua escolha nesta página.</p></div></div><div class="report-status-actions" id="threads-report-status-actions"><button class="button button-primary" type="button" id="threads-report-submitted"><span data-icon="check-circle" aria-hidden="true"></span>Marcar como enviada</button><button class="button button-outline" type="button" id="threads-report-not-submitted"><span data-icon="x" aria-hidden="true"></span>Marcar como não enviada</button></div><div class="report-status-result" id="threads-report-status" role="status" aria-live="polite" hidden><span data-icon="check-circle"></span><div><strong id="threads-report-status-title"></strong><p id="threads-report-status-detail"></p></div><button class="text-button" type="button" id="threads-report-status-reset">Alterar registro</button></div><p class="report-status-note">O registro fica apenas nesta página e desaparece ao recarregá-la. Não confirma que a plataforma recebeu a denúncia ou tomou alguma medida.</p></div>
+        <p class="field-help">Você pode editar ou excluir indícios fracos no rascunho. Este site não envia denúncias nem confirma uma decisão da Meta. As anotações manuais abaixo continuam sendo independentes.</p>
+      </section>
+    </div>`;
+  q('#profile-form').insertAdjacentElement('afterend', panel);
+
+  const demoLaunch = document.createElement('div');
+  demoLaunch.className = 'demo-launch';
+  const demoButton = document.createElement('button');
+  demoButton.type = 'button';
+  demoButton.id = 'threads-demo-launch';
+  demoButton.className = 'button button-outline';
+  demoButton.innerHTML = '<span data-icon="play" aria-hidden="true"></span>Explorar demonstração';
+  const demoLabel = document.createElement('p');
+  demoLabel.className = 'demo-label';
+  demoLabel.textContent = 'Demonstração fictícia com dados sintéticos — sem consulta à Meta.';
+  demoLaunch.append(demoButton, demoLabel);
+  panel.insertAdjacentElement('beforebegin', demoLaunch);
+
+  const resultRoot = q('#threads-result', panel);
+  let generation = 0;
+  let lastResult = null;
+  let reportFlowStarted = false;
+  let reportStatus = null;
+
+  function decorateIcons(root) {
+    if (typeof window.SignalIcons?.decorate === 'function') window.SignalIcons.decorate(root);
+  }
+  function icon(name, className = 'icon') {
+    if (typeof window.SignalIcons?.create === 'function') {
+      const svg = window.SignalIcons.create(name, className);
+      if (svg instanceof Node) {
+        svg.setAttribute('aria-hidden', 'true');
+        return svg;
+      }
+    }
+    const fallback = document.createElement('span');
+    fallback.dataset.icon = name;
+    fallback.className = className;
+    fallback.setAttribute('aria-hidden', 'true');
+    return fallback;
+  }
+  function text(parent, tag, value, className = '') {
+    const item = document.createElement(tag);
+    item.textContent = value;
+    item.className = className;
+    parent.append(item);
+    return item;
+  }
+  function activateTab(tab, focus = false) {
+    if (!tab) return;
+    qa('.result-tab', resultRoot).forEach((candidate) => {
+      const selected = candidate === tab;
+      candidate.setAttribute('aria-selected', String(selected));
+      candidate.tabIndex = selected ? 0 : -1;
+      const pane = q(`#${candidate.getAttribute('aria-controls')}`, resultRoot);
+      if (pane) pane.hidden = !selected;
+    });
+    if (focus) tab.focus();
+  }
+  function resetResultView() {
+    activateTab(q('#threads-tab-overview', resultRoot));
+    q('#threads-score-number', resultRoot).textContent = '';
+    q('#threads-score-label', resultRoot).textContent = 'Heurística de prioridade de revisão; não é probabilidade.';
+    const meter = q('#threads-score-meter', resultRoot);
+    meter.value = 0;
+    meter.hidden = true;
+    q('#threads-band', resultRoot).textContent = '';
+    q('#threads-summary', resultRoot).textContent = '';
+    q('#threads-provenance', resultRoot).textContent = '';
+    q('#threads-limitations', resultRoot).textContent = '';
+    q('#threads-stat-grid', resultRoot).replaceChildren();
+    q('#threads-findings', resultRoot).replaceChildren();
+    q('#threads-evidence-list', resultRoot).replaceChildren();
+    q('#threads-evidence-empty', resultRoot).hidden = false;
+    q('#threads-demo-badge', resultRoot).hidden = true;
+  }
+  function update() {
+    q('#threads-download', resultRoot).disabled = !lastResult || !q('#threads-reviewed', resultRoot).checked;
+    q('#threads-copy', resultRoot).disabled = !lastResult || !q('#threads-reviewed', resultRoot).checked;
+    const reportAllowed = Boolean(lastResult && lastResult.demo !== true);
+    q('#threads-report-links', resultRoot).hidden = !reportAllowed;
+    q('#threads-report-followup', resultRoot).hidden = !reportAllowed || !reportFlowStarted;
+  }
+  function resetReportStatus() {
+    reportFlowStarted = false;
+    reportStatus = null;
+    q('#threads-report-followup', resultRoot).hidden = true;
+    q('#threads-report-status-actions', resultRoot).hidden = false;
+    q('#threads-report-status', resultRoot).hidden = true;
+    q('#threads-report-status', resultRoot).removeAttribute('data-status');
+    q('#threads-report-status-title', resultRoot).textContent = '';
+    q('#threads-report-status-detail', resultRoot).textContent = '';
+  }
+  function revealReportStatus() {
+    if (!lastResult || lastResult.demo === true) return;
+    reportFlowStarted = true;
+    q('#threads-report-followup', resultRoot).hidden = false;
+  }
+  function recordReportStatus(submitted) {
+    if (!lastResult || lastResult.demo === true || !reportFlowStarted) return;
+    const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date());
+    reportStatus = { submitted, date, platform: 'Threads' };
+    const result = q('#threads-report-status', resultRoot);
+    result.dataset.status = submitted ? 'submitted' : 'not-submitted';
+    const statusIcon = q('[data-icon]', result);
+    statusIcon.dataset.icon = submitted ? 'check-circle' : 'info';
+    statusIcon.dataset.iconReady = 'false';
+    decorateIcons(result);
+    q('#threads-report-status-title', resultRoot).textContent = submitted
+      ? 'Você marcou a denúncia como enviada.'
+      : 'Você marcou que não enviou a denúncia.';
+    q('#threads-report-status-detail', resultRoot).textContent = `Threads · ${date}. Este registro local não confirma o recebimento nem a decisão da plataforma.`;
+    q('#threads-report-status-actions', resultRoot).hidden = true;
+    result.hidden = false;
+  }
+  function clearResult() {
+    resetReportStatus();
+    lastResult = null;
+    resultRoot.hidden = true;
+    resetResultView();
+    q('#threads-draft', resultRoot).value = '';
+    q('#threads-reviewed', resultRoot).checked = false;
+    update();
+  }
+  function addStat(label, value) {
+    const item = document.createElement('div');
+    item.className = 'api-stat';
+    const title = text(item, 'dt', label);
+    const symbol = { 'Publicações elegíveis': 'file', 'Janela da amostra': 'calendar', 'Indicadores avaliados': 'activity', 'Confiança': 'shield' }[label] || 'chart';
+    title.prepend(icon(symbol));
+    text(item, 'dd', value);
+    q('#threads-stat-grid', resultRoot).append(item);
+  }
+  function appendEvidenceLink(parent, evidence, className) {
+    if (!evidence.permalink) return;
+    // Restrict rendered links as well as server output.
+    try {
+      const url = new URL(evidence.permalink);
+      if (url.protocol === 'https:' && ['threads.com', 'www.threads.com', 'threads.net', 'www.threads.net'].includes(url.hostname)) {
+        const link = text(parent, 'a', 'Conferir publicação pública ↗', className);
+        link.href = url.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+      }
+    } catch { /* An invalid evidence link is omitted. */ }
+  }
+  function featureEvidence(feature) {
+    return Array.isArray(feature.evidence) ? feature.evidence : [];
+  }
+  function featureStatus(feature) {
+    return feature.value === null ? 'Não avaliado' : 'Analisado';
+  }
+  function featureIcon(feature) {
+    if (feature.value === null) return 'info';
+    return featureEvidence(feature).length ? 'activity' : 'check-circle';
+  }
+  function renderFeatureCards(features) {
+    const list = q('#threads-findings', resultRoot);
+    list.replaceChildren();
+    if (!features.length) {
+      text(list, 'p', 'Não há indicadores avaliados nesta amostra.', 'result-empty');
+      return;
+    }
+    features.forEach((feature) => {
+      const card = document.createElement('details');
+      card.className = 'finding signal-card';
+      const summary = document.createElement('summary');
+      summary.className = 'signal-card-heading';
+      summary.append(icon(featureIcon(feature), 'signal-icon'));
+      text(summary, 'span', feature.title, 'signal-title');
+      text(summary, 'span', featureStatus(feature), 'signal-status');
+      summary.append(icon('chevron-down'));
+      card.append(summary);
+
+      const detail = document.createElement('div');
+      detail.className = 'signal-detail';
+      text(detail, 'p', `Observação: ${feature.observation}`, 'finding-interpretation');
+      text(detail, 'p', `Contexto legítimo possível: ${feature.caution}`, 'finding-context');
+      if (feature.value === null) {
+        text(detail, 'p', 'Indicador não avaliado nesta amostra.', 'finding-point');
+      } else {
+        text(detail, 'p', `Valor do indicador: ${feature.value.toFixed(2)} · peso ${feature.weight}`, 'finding-point');
+      }
+      const evidence = featureEvidence(feature);
+      if (!evidence.length) {
+        text(detail, 'p', 'Sem exemplos citados para este indicador.', 'finding-context');
+      } else {
+        text(detail, 'p', 'Exemplos citados:', 'finding-context');
+        evidence.forEach((item) => {
+          const example = document.createElement('div');
+          example.className = 'evidence-item';
+          text(example, 'p', `[${item.timestamp}] ${item.excerpt}`, 'finding-context');
+          appendEvidenceLink(example, item, 'finding-context');
+          detail.append(example);
+        });
+      }
+      card.append(detail);
+      list.append(card);
+    });
+  }
+  function renderEvidence(features) {
+    const list = q('#threads-evidence-list', resultRoot);
+    const empty = q('#threads-evidence-empty', resultRoot);
+    const seen = new Set();
+    list.replaceChildren();
+    features.forEach((feature) => {
+      featureEvidence(feature).forEach((item) => {
+        const identity = item.postId || item.permalink || `${item.timestamp}\u0000${item.excerpt}`;
+        if (seen.has(identity)) return;
+        seen.add(identity);
+        const evidence = document.createElement('article');
+        evidence.className = 'evidence-item';
+        text(evidence, 'h4', `Exemplo citado · ${feature.title}`);
+        text(evidence, 'p', `Data registrada: ${item.timestamp}`, 'finding-context');
+        text(evidence, 'p', item.excerpt, 'finding-interpretation');
+        appendEvidenceLink(evidence, item, 'finding-context');
+        list.append(evidence);
+      });
+    });
+    empty.hidden = seen.size > 0;
+  }
+  function renderScore(result, features) {
+    const score = result.score;
+    const meter = q('#threads-score-meter', resultRoot);
+    q('#threads-score-number', resultRoot).textContent = score === null ? 'Sem pontuação' : `${score}/100`;
+    q('#threads-score-label', resultRoot).textContent = score === null
+      ? 'Amostra insuficiente para calcular a prioridade de revisão.'
+      : 'Heurística de prioridade de revisão; não é probabilidade.';
+    meter.hidden = score === null;
+    if (score !== null) meter.value = score;
+    addStat('Publicações elegíveis', String(result.sample.eligiblePosts));
+    addStat('Janela da amostra', `${result.source.windowDays} dias`);
+    addStat('Indicadores avaliados', String(features.filter((feature) => feature.value !== null).length));
+    addStat('Confiança', result.confidence);
+  }
+  function render(result) {
+    lastResult = result;
+    resetResultView();
+    resultRoot.hidden = false;
+    q('#threads-demo-badge', resultRoot).hidden = result.demo !== true;
+    q('#threads-band', resultRoot).textContent = result.band;
+    q('#threads-summary', resultRoot).textContent = `${result.score === null ? 'Sem pontuação: amostra insuficiente.' : `Prioridade de revisão: ${result.score}/100 (não é probabilidade).`} ${result.confidence}. ${result.sample.eligiblePosts} publicações elegíveis, ${result.sample.spanDays} dias entre a primeira e a última data da amostra.`;
+    q('#threads-provenance', resultRoot).textContent = `Dados sintéticos: ${result.source.fetchedAt}. Versão: ${result.analysisVersion}. Caso: ${result.caseId}. Janela: ${result.source.windowDays} dias; ${result.source.pages} página(s); ${result.source.truncated ? 'amostra truncada' : 'paginação encerrada'}.`;
+    q('#threads-limitations', resultRoot).textContent = result.limitations.join(' ');
+    const features = Array.isArray(result.features) ? result.features : [];
+    renderScore(result, features);
+    renderFeatureCards(features);
+    renderEvidence(features);
+    const lines = [
+      'DEMONSTRAÇÃO FICTÍCIA — DADOS SINTÉTICOS — SEM CONSULTA A CONTAS REAIS',
+      `Perfil: ${result.profile.url}`, `Consulta: ${result.source.fetchedAt}`, `Caso: ${result.caseId}`, `Versão: ${result.analysisVersion}`, `Impressão digital do registro: ${result.fingerprint}`,
+      `Janela: ${result.source.windowStart} a ${result.source.windowEnd}`, `Publicações elegíveis: ${result.sample.eligiblePosts}; amostra truncada: ${result.sample.truncated ? 'sim' : 'não'}`,
+      `Resumo: ${result.band}`, `Pontuação: ${result.score === null ? 'não calculada' : `${result.score}/100 — heurística não calibrada, não é probabilidade`}`, '', result.demo ? 'EXEMPLOS SINTÉTICOS — NÃO USAR PARA DENUNCIAR' : 'OBSERVAÇÕES EXTRAÍDAS DE DADOS PÚBLICOS PERMITIDOS',
+    ];
+    features.filter((feature) => feature.value !== null).forEach((feature) => {
+      lines.push(`${feature.title}: ${feature.observation}`, `Possível explicação legítima: ${feature.caution}`);
+      featureEvidence(feature).forEach((item) => lines.push(`[${item.timestamp}] ${item.excerpt} | ${item.permalink || `ID público: ${item.postId}`}`));
+    });
+    lines.push('', 'CONTEXTO E CORREÇÕES DA PESSOA REVISORA', '[Edite: remova indícios fracos e registre possíveis explicações legítimas. Não faça afirmações de identidade ou intenção.]', '', 'LIMITAÇÕES', ...result.limitations, '', 'Nenhuma denúncia foi enviada. Se houver uma violação específica, a pessoa revisora decide se fará uma denúncia manual por meio da plataforma.', 'Instruções oficiais: https://help.instagram.com/6602413966453273/');
+    q('#threads-draft', resultRoot).value = lines.join('\n');
+    q('#threads-reviewed', resultRoot).checked = false;
+    decorateIcons(resultRoot);
+    update();
+    window.dispatchEvent(new CustomEvent('signalcheck:result', { detail: { demo: result.demo === true, caseId: result.caseId } }));
+  }
+
+  window.addEventListener('signalcheck:clear', () => {
+    generation += 1;
+    panel.hidden = true;
+    clearResult();
+  });
+  q('#threads-reviewed', resultRoot).addEventListener('change', () => {
+    update();
+    window.dispatchEvent(new CustomEvent('signalcheck:report-review', { detail: { approved: q('#threads-reviewed', resultRoot).checked } }));
+  });
+  q('#threads-draft', resultRoot).addEventListener('input', () => { q('#threads-reviewed', resultRoot).checked = false; update(); });
+  qa('.result-tab', resultRoot).forEach((tab, index, tabs) => {
+    tab.addEventListener('click', () => activateTab(tab));
+    tab.addEventListener('keydown', (event) => {
+      let nextIndex = null;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % tabs.length;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + tabs.length) % tabs.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = tabs.length - 1;
+      if (nextIndex === null) return;
+      event.preventDefault();
+      activateTab(tabs[nextIndex], true);
+    });
+  });
+
+  async function launchDemo() {
+    const current = ++generation;
+    panel.hidden = false;
+    clearResult();
+    q('#threads-status', panel).textContent = 'Carregando somente dados sintéticos…';
+    update();
+    try {
+      let result = window.SIGNALCHECK_DEMO_DATA || null;
+      if (!result) {
+        const response = await fetch('/threads-demo.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Demonstração indisponível.');
+        result = await response.json();
+      }
+      if (current !== generation) return;
+      if (result.demo !== true || result.reportSubmitted !== false || result.source.pages !== 0) throw new Error('Demonstração inválida.');
+      render(result);
+      q('#threads-status', panel).textContent = 'DEMO FICTÍCIO: 70 publicações sintéticas. Confira os exemplos, edite o rascunho e marque a revisão para copiar/baixar.';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (error) {
+      if (current === generation) q('#threads-status', panel).textContent = error.message;
+    }
+  }
+  demoButton.addEventListener('click', launchDemo);
+  if (new URLSearchParams(window.location.search).get('demo') === '1') launchDemo();
+
+  q('#threads-download', resultRoot).addEventListener('click', () => {
+    if (!q('#threads-reviewed', resultRoot).checked || !lastResult) return;
+    const url = URL.createObjectURL(new Blob([q('#threads-draft', resultRoot).value], { type: 'text/plain;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `signal-check-threads-${lastResult.caseId}.txt`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  q('#threads-copy', resultRoot).addEventListener('click', async () => {
+    if (!q('#threads-reviewed', resultRoot).checked || !lastResult) return;
+    try { await navigator.clipboard.writeText(q('#threads-draft', resultRoot).value); q('#threads-status', panel).textContent = 'Rascunho copiado. Nenhuma denúncia enviada.'; }
+    catch { q('#threads-draft', resultRoot).focus(); q('#threads-draft', resultRoot).select(); q('#threads-status', panel).textContent = 'Selecione e copie o texto manualmente.'; }
+  });
+  q('#threads-open-profile', resultRoot).addEventListener('click', revealReportStatus);
+  q('#threads-report-guide', resultRoot).addEventListener('click', revealReportStatus);
+  q('#threads-report-submitted', resultRoot).addEventListener('click', () => recordReportStatus(true));
+  q('#threads-report-not-submitted', resultRoot).addEventListener('click', () => recordReportStatus(false));
+  q('#threads-report-status-reset', resultRoot).addEventListener('click', () => {
+    reportStatus = null;
+    q('#threads-report-status', resultRoot).hidden = true;
+    q('#threads-report-status', resultRoot).removeAttribute('data-status');
+    q('#threads-report-status-actions', resultRoot).hidden = false;
+  });
+
+  decorateIcons(panel);
+  decorateIcons(demoLaunch);
+  resetResultView();
+  update();
+})();
+
+</script>
+<script>
+(() => {
+  'use strict';
+  const q = (selector) => document.querySelector(selector);
+  const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const icons = window.SignalIcons;
+  icons?.decorate();
+  let toastTimer;
+  let currentStep = 1;
+  const sidebar = q('#app-sidebar');
+  const menu = q('#menu-toggle');
+  const mobile = window.matchMedia('(max-width: 950px)');
+  let restoreFocus = null;
+
+  function toast(message) {
+    q('#ui-toast-text').textContent = message;
+    q('#ui-toast').hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { q('#ui-toast').hidden = true; }, 3500);
+  }
+  function setStep(step) {
+    currentStep = step;
+    qa('#workflow-stepper [data-step]').forEach((item) => {
+      const number = Number(item.dataset.step);
+      item.classList.toggle('is-current', number === step);
+      item.classList.toggle('is-complete', number < step);
+      if (number === step) item.setAttribute('aria-current', 'step');
+      else item.removeAttribute('aria-current');
+      const badge = q(`#workflow-stepper [data-step="${number}"] .step-number`);
+      if (number < step && icons) badge.replaceChildren(icons.create('check'));
+      else badge.textContent = String(number).padStart(2, '0');
+    });
+  }
+  function closeMenu(restore = true) {
+    sidebar.classList.remove('is-open');
+    q('#nav-backdrop').hidden = true;
+    document.body.classList.remove('nav-open');
+    menu.setAttribute('aria-expanded', 'false');
+    menu.setAttribute('aria-label', 'Abrir navegação');
+    if (restore && restoreFocus) restoreFocus.focus();
+    restoreFocus = null;
+  }
+  function openMenu() {
+    restoreFocus = document.activeElement;
+    sidebar.classList.add('is-open');
+    q('#nav-backdrop').hidden = false;
+    document.body.classList.add('nav-open');
+    menu.setAttribute('aria-expanded', 'true');
+    menu.setAttribute('aria-label', 'Fechar navegação');
+    sidebar.querySelector('a, button')?.focus();
+  }
+  menu.addEventListener('click', () => sidebar.classList.contains('is-open') ? closeMenu() : openMenu());
+  q('#nav-backdrop').addEventListener('click', () => closeMenu());
+  mobile.addEventListener('change', () => closeMenu(false));
+  document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      closeMenu(false);
+      q('#profile-url').focus();
+      q('#workspace').scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+    if (!mobile.matches || !sidebar.classList.contains('is-open')) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeMenu(); }
+    if (event.key === 'Tab') {
+      const items = qa('a[href], button:not(:disabled)', sidebar);
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  qa('.sidebar-nav a').forEach((link) => link.addEventListener('click', () => {
+    qa('.sidebar-nav .nav-item').forEach((item) => item.classList.remove('is-active'));
+    link.classList.add('is-active');
+    if (mobile.matches) {
+      closeMenu(false);
+      const destination = document.querySelector(link.getAttribute('href'));
+      destination?.setAttribute('tabindex', '-1');
+      destination?.focus({ preventScroll: true });
+    }
+  }));
+
+  q('#theme-toggle').addEventListener('click', () => {
+    const dark = document.documentElement.dataset.theme !== 'dark';
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    const button = q('#theme-toggle');
+    button.setAttribute('aria-pressed', String(dark));
+    button.setAttribute('aria-label', dark ? 'Ativar tema claro' : 'Ativar tema escuro');
+    if (icons) button.replaceChildren(icons.create(dark ? 'sun' : 'moon'));
+    document.querySelector('meta[name="theme-color"]').content = dark ? '#0e1813' : '#f5f8f6';
+  });
+  q('#intake-shortcut').textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
+  const placeholders = {
+    threads: 'https://www.threads.com/@username',
+    instagram: 'https://www.instagram.com/username/',
+    facebook: 'https://www.facebook.com/username',
+  };
+  function selectPlatform(platform) {
+    qa('.platform-choice').forEach((button) => {
+      const selected = button.dataset.platform === platform;
+      button.classList.toggle('is-selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+    q('#profile-url').placeholder = placeholders[platform] || placeholders.threads;
+  }
+  qa('.platform-choice').forEach((button) => button.addEventListener('click', () => {
+    selectPlatform(button.dataset.platform);
+    q('#profile-url').focus();
+  }));
+  q('#paste-link').addEventListener('click', async () => {
+    try {
+      const raw = (await navigator.clipboard.readText()).trim();
+      if (!raw || raw.length > 2048) { toast('Cole um link válido com até 2.048 caracteres.'); return; }
+      q('#profile-url').value = raw;
+      q('#profile-url').dispatchEvent(new Event('input', { bubbles: true }));
+      q('#profile-url').focus();
+      toast('Link colado. Confira o endereço e confirme o acesso público.');
+    } catch {
+      q('#profile-url').focus();
+      toast('A área de transferência não está disponível. Cole o link manualmente.');
+    }
+  });
+  ['#sidebar-demo', '#hero-demo'].forEach((selector) => q(selector).addEventListener('click', () => {
+    if (mobile.matches) closeMenu();
+    q('#threads-demo-launch')?.click();
+  }));
+
+  window.addEventListener('signalcheck:profile', (event) => { setStep(2); selectPlatform(event.detail.platform); });
+  window.addEventListener('signalcheck:clear', () => setStep(1));
+  window.addEventListener('signalcheck:result', () => { setStep(3); icons?.decorate(q('#threads-panel')); });
+  window.addEventListener('signalcheck:report-review', (event) => setStep(event.detail.approved ? 4 : 3));
+  q('#threads-draft').addEventListener('input', () => setStep(3));
+  q('#observations-form').addEventListener('submit', () => {
+    if (!q('#assessment-panel').hidden) {
+      setStep(3);
+      icons?.decorate(q('#assessment-panel'));
+      if (icons) qa('#findings-list .finding-symbol').forEach((item) => item.replaceChildren(icons.create('activity')));
+    }
+  });
+  q('#review-approved').addEventListener('change', (event) => setStep(event.target.checked ? 4 : 3));
+  q('#report-draft').addEventListener('input', () => {
+    const approval = q('#review-approved');
+    approval.checked = false;
+    approval.dispatchEvent(new Event('change', { bubbles: true }));
+    q('#print-review').disabled = true;
+  });
+  if (q('#print-review') && icons) q('#print-review').prepend(icons.create('file'));
+
+  function updateNotes() {
+    const list = q('#observations-list');
+    q('#empty-observations').hidden = list.children.length !== 0;
+    icons?.decorate(list);
+  }
+  new MutationObserver(updateNotes).observe(q('#observations-list'), { childList: true });
+  updateNotes();
+  // The asynchronous demo may have finished before this shell module loaded.
+  if (!q('#threads-result').hidden) setStep(3);
+  else setStep(currentStep);
+})();
+
+</script>
+<script>document.getElementById("threads-demo-launch")?.click();</script>
+</body>
+</html>
